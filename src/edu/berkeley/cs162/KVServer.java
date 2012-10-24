@@ -56,22 +56,34 @@ public class KVServer implements KeyValueInterface {
 	}
 	
 	public boolean put(String key, String value) throws KVException {
+		// Must be called before anything else
 		AutoGrader.agKVServerPutStarted(key, value);
-        // TODO: implement me
+
+		// TODO: implement me
+
+		// Must be called before returning
 		AutoGrader.agKVServerPutFinished(key, value);
 		return false;
 	}
 	
 	public String get (String key) throws KVException {
+		// Must be called before anything else
 		AutoGrader.agKVServerGetStarted(key);
-	     // TODO: implement me
+
+		// TODO: implement me
+
+		// Must be called before returning
 		AutoGrader.agKVServerGetFinished(key);
 		return null;
 	}
 	
 	public void del (String key) throws KVException {
+		// Must be called before anything else
 		AutoGrader.agKVServerDelStarted(key);
+
 		// TODO: implement me
+
+		// Must be called before returning
 		AutoGrader.agKVServerDelFinished(key);
 	}
 }

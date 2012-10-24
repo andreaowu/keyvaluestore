@@ -59,9 +59,13 @@ public class KVCache implements KeyValueInterface {
 	 * @return the value associated to this key, or null if no value with this key exists in the cache.
 	 */
 	public String get(String key) {
+		// Must be called before anything else
 		AutoGrader.agCacheGetStarted(key);
-        // TODO: Implement Me!
 		AutoGrader.agCacheGetDelay();
+        
+		// TODO: Implement Me!
+		
+		// Must be called before returning
 		AutoGrader.agCacheGetFinished(key);
 		return null;
 	}
@@ -76,9 +80,13 @@ public class KVCache implements KeyValueInterface {
 	 * @return true is something has been overwritten 
 	 */
 	public boolean put(String key, String value) {
+		// Must be called before anything else
 		AutoGrader.agCachePutStarted(key, value);
 		AutoGrader.agCachePutDelay();
+
 		// TODO: Implement Me!
+		
+		// Must be called before returning
 		AutoGrader.agCachePutFinished(key, value);
 		return false;
 	}
@@ -89,8 +97,13 @@ public class KVCache implements KeyValueInterface {
 	 * @param key	the key with which the specified value is to be associated.
 	 */
 	public void del (String key) {
+		// Must be called before anything else
 		AutoGrader.agCacheGetStarted(key);
 		AutoGrader.agCacheDelDelay();
+		
+		// TODO: Implement Me!
+		
+		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
 	}
 	
