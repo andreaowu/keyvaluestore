@@ -103,16 +103,16 @@ public class KVStore implements KeyValueInterface {
 		AutoGrader.agStoreDelay();
 	}
 	
-    public String toXML() {
+    public String toXML() throws KVException {
         // TODO: implement me
         return null;
     }        
 
-    public void dumpToFile(String fileName) {
+    public void dumpToFile(String fileName) throws KVException {
         // TODO: implement me
     }
 
-    public void restoreFromFile(String fileName) {
+    public void restoreFromFile(String fileName) throws KVException{
         // TODO: implement me
     }
 }
