@@ -1,5 +1,5 @@
 /**
- * Slave Server component of a KeyValue store
+ * Sample instantiation of the Key-Value server  
  * 
  * @author Mosharaf Chowdhury (http://www.mosharaf.com)
  * @author Prashanth Mohan (http://www.cs.berkeley.edu/~prmohan)
@@ -30,60 +30,30 @@
  */
 package edu.berkeley.cs162;
 
-/**
- * This class defines the slave key value servers. Each individual KVServer 
- * would be a fully functioning Key-Value server. For Project 3, you would 
- * implement this class. For Project 4, you will have a Master Key-Value server 
- * and multiple of these slave Key-Value servers, each of them catering to a 
- * different part of the key namespace.
- *
- */
-public class KVServer implements KeyValueInterface {
-	private KVStore dataStore = null;
-	private KVCache dataCache = null;
-	
-	private static final int MAX_KEY_SIZE = 256;
-	private static final int MAX_VAL_SIZE = 256 * 1024;
+import java.io.IOException;
+
+import edu.berkeley.cs162.KVClientHandler;
+import edu.berkeley.cs162.KVServer;
+import edu.berkeley.cs162.NetworkHandler;
+import edu.berkeley.cs162.SocketServer;
+
+public class Server {
+	static KVServer key_server = null;
+	static SocketServer server = null;
 	
 	/**
-	 * @param numSets number of sets in the data Cache.
+	 * @param args
+	 * @throws IOException 
 	 */
-	public KVServer(int numSets, int maxElemsPerSet) {
-		dataStore = new KVStore();
-		dataCache = new KVCache(numSets, maxElemsPerSet);
-
-		AutoGrader.registerKVServer(dataStore, dataCache);
+	public static void main(String[] args) throws IOException {
+		System.out.println("Binding Server:");
+		key_server = new KVServer(100, 10);
+		server = new SocketServer("localhost", 8080);
+		NetworkHandler handler = new KVClientHandler(key_server);
+		server.addHandler(handler);
+		server.connect();
+		System.out.println("Starting Server");
+		server.run();
 	}
-	
-	public boolean put(String key, String value) throws KVException {
-		// Must be called before anything else
-		AutoGrader.agKVServerPutStarted(key, value);
 
-		// TODO: implement me
-
-		// Must be called before returning
-		AutoGrader.agKVServerPutFinished(key, value);
-		return false;
-	}
-	
-	public String get (String key) throws KVException {
-		// Must be called before anything else
-		AutoGrader.agKVServerGetStarted(key);
-
-		// TODO: implement me
-
-		// Must be called before returning
-		AutoGrader.agKVServerGetFinished(key);
-		return null;
-	}
-	
-	public void del (String key) throws KVException {
-		// Must be called before anything else
-		AutoGrader.agKVServerDelStarted(key);
-
-		// TODO: implement me
-
-		// Must be called before returning
-		AutoGrader.agKVServerDelFinished(key);
-	}
 }
