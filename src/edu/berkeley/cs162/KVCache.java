@@ -122,7 +122,7 @@ public class KVCache implements KeyValueInterface {
 	 * @return	set of the key
 	 */
 	private int getSetId(String key) {
-		return key.hashCode() % numSets;
+		return Math.abs(key.hashCode()) % numSets;
 	}
 	
     public String toXML() {
