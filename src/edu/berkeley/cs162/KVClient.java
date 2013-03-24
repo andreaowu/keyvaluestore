@@ -32,11 +32,13 @@
 package edu.berkeley.cs162;
 
 import java.net.Socket;
+import java.io.IOException;
+import java.net.UnknownHostException;
 
 
 /**
  * This class is used to communicate with (appropriately marshalling and unmarshalling) 
- * objects implementing the {@link KeyValueInterface}.
+ * objects implementing the KeyValueInterface.
  *
  * @param <K> Java Generic type for the Key
  * @param <V> Java Generic type for the Value
@@ -45,6 +47,7 @@ public class KVClient implements KeyValueInterface {
 
 	private String server = null;
 	private int port = 0;
+	private Socket skt;
 	
 	/**
 	 * @param server is the DNS reference to the Key-Value server
@@ -56,16 +59,30 @@ public class KVClient implements KeyValueInterface {
 	}
 	
 	private Socket connectHost() throws KVException {
-	    // TODO: Implement Me!  
-		return null;
+		try {
+			skt = new Socket(server, port);
+			return skt;
+		} catch (UnknownHostException e) {
+			KVMessage kmsg = new KVMessage("Network Error: Could not connect");
+			throw new KVException(kmsg);
+		} catch (IOException e) {
+			KVMessage kmsg = new KVMessage("Network Error: Could not create socket");
+			throw new KVException(kmsg);
+		}
 	}
 	
 	private void closeHost(Socket sock) throws KVException {
-	    // TODO: Implement Me!
+	    try {
+	    	sock.close();
+	    } catch (IOException e) {
+	    	KVMessage kmsg = new KVMessage("Unknown Error: Could not close socket");
+			throw new KVException(kmsg);
+	    }
 	}
 	
 	public boolean put(String key, String value) throws KVException {
-	    // TODO: Implement Me!
+	    
+	    
 	    return true;
 	}
 
