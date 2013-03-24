@@ -75,24 +75,36 @@ public class KVClient implements KeyValueInterface {
 	    try {
 	    	sock.close();
 	    } catch (IOException e) {
-	    	KVMessage kmsg = new KVMessage("Unknown Error: Could not close socket");
+	    	KVMessage kmsg = new KVMessage("Unknown Error: Could not closeHost");
 			throw new KVException(kmsg);
 	    }
 	}
 	
 	public boolean put(String key, String value) throws KVException {
-	    
-	    
+	    Socket sock = connectHost();
+	    KVMessage msg = new KVMessage("putreq");
+	    msg.setKey(key);
+	    msg.setValue(value);
+	    msg.sendMessage(sock);
+	    closeHost(sock);
 	    return true;
 	}
 
 
 	public String get(String key) throws KVException {
-	    // TODO: Implement Me!
+	    Socket sock = connectHost();
+	    KVMessage msg = new KVMessage("getreq");
+	    msg.setKey(key);
+	    msg.sendMessage(sock);
+	    closeHost(sock);
 	    return null;
 	}
 	
 	public void del(String key) throws KVException {
-	    // TODO: Implement Me!
+		Socket sock = connectHost();
+		KVMessage msg = new KVMessage("delreq");
+		msg.setKey(key);
+		msg.sendMessage(sock);
+	    closeHost(sock);
 	}	
 }
