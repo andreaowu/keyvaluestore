@@ -31,7 +31,10 @@
 package edu.berkeley.cs162;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
-
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.HashMap;
+import java.lang.String;
+import java.util.ArrayList;
 
 /**
  * A set-associate cache which has a fixed maximum number of sets (numSets).
@@ -41,6 +44,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 public class KVCache implements KeyValueInterface {	
 	private int numSets = 100;
 	private int maxElemsPerSet = 10;
+	private HashMap<Integer, ArrayList<String[]>> setToElem;
+	private KVStore store;
+	private HashMap<Integer, WriteLock> locks;
 		
 	/**
 	 * Creates a new LRU cache.
@@ -49,7 +55,15 @@ public class KVCache implements KeyValueInterface {
 	public KVCache(int numSets, int maxElemsPerSet) {
 		this.numSets = numSets;
 		this.maxElemsPerSet = maxElemsPerSet;     
-		// TODO: Implement Me!
+		setToElem = new HashMap<Integer, ArrayList<String[]>>();
+		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		locks = new HashMap<Integer, WriteLock>();
+		for (int i = 0; i < numSets; i++) {
+			setToElem.put(i, new ArrayList<String[]>());	// String[0]: key	String[1]: value	String[2]: use bit
+			// TODO: Need to locks.put(i, new WriteLock()); but I don't know how.
+			// WriteLock's constructor is private.
+		}
+		store = new KVStore();
 	}
 
 	/**
@@ -63,7 +77,15 @@ public class KVCache implements KeyValueInterface {
 		AutoGrader.agCacheGetStarted(key);
 		AutoGrader.agCacheGetDelay();
         
-		// TODO: Implement Me!
+		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
+		for (int i = 0; i < keyVal.size(); i++) {
+			if (keyVal.get(i)[0].equals(key)) {
+				keyVal.get(i)[2] = "1";
+				// Must be called before returning
+				AutoGrader.agCacheGetFinished(key);
+				return keyVal.get(i)[1];
+			}
+		}
 		
 		// Must be called before returning
 		AutoGrader.agCacheGetFinished(key);
@@ -84,11 +106,56 @@ public class KVCache implements KeyValueInterface {
 		AutoGrader.agCachePutStarted(key, value);
 		AutoGrader.agCachePutDelay();
 
-		// TODO: Implement Me!
+		try {
+			store.put(key, value);
+		} catch (KVException e) {
+			
+		}
 		
+		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
+		// check whether element is already in set
+		for (int i = 0; i < keyVal.size(); i++) {
+			if (keyVal.get(i)[0].equals(key)) {
+				String[] changeThis = keyVal.get(i);
+				changeThis[1] = value;
+				changeThis[2] = "0"; //TODO: if put in a new one over an old one, reference bit is 0?
+				keyVal.remove(i);
+				keyVal.add(i, changeThis);
+				setToElem.put(getSetId(key), keyVal);
+				// Must be called before returning
+				AutoGrader.agCacheGetFinished(key);
+				return true;
+			}
+		}
+		
+		String[] put = new String[3];
+		put[0] = key;
+		put[1] = value;
+		put[2] = "0";
+		keyVal.add(put);
+		
+		if (keyVal.size() < maxElemsPerSet) {
+			// insert new key value pair
+			setToElem.put(getSetId(key), keyVal);
+			// Must be called before returning
+			AutoGrader.agCacheGetFinished(key);
+			return false;
+		}
+		
+		String[] check = keyVal.get(0);
+		// overwrite value
+		while (check[3] != "0") {
+			check[3] = "0";
+			keyVal.remove(0);
+			keyVal.add(check);
+			setToElem.put(getSetId(key), keyVal);
+			check = keyVal.get(0);
+		}
+		keyVal.remove(0);
+		keyVal.add(put);
 		// Must be called before returning
 		AutoGrader.agCachePutFinished(key, value);
-		return false;
+		return true;
 	}
 
 	/**
@@ -101,7 +168,19 @@ public class KVCache implements KeyValueInterface {
 		AutoGrader.agCacheGetStarted(key);
 		AutoGrader.agCacheDelDelay();
 		
-		// TODO: Implement Me!
+		try {
+			store.del(key);
+		} catch (KVException e) {
+			
+		}
+		
+		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
+		for (int i = 0; i < keyVal.size(); i++) {
+			if (keyVal.get(i)[0].equals(key)) {
+				keyVal.remove(i);
+				break;
+			}
+		}
 		
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
@@ -112,8 +191,14 @@ public class KVCache implements KeyValueInterface {
 	 * @return	the write lock of the set that contains key.
 	 */
 	public WriteLock getWriteLock(String key) {
-	    // TODO: Implement Me!
-	    return null;
+		while (locks.get(getSetId(key)) == null) {
+			try {
+				locks.get(getSetId(key)).wait();
+			} catch (InterruptedException e) {
+			}
+		}
+		locks.get(getSetId(key)).notify();
+	    return locks.get(getSetId(key));
 	}
 	
 	/**
@@ -126,7 +211,28 @@ public class KVCache implements KeyValueInterface {
 	}
 	
     public String toXML() {
-        // TODO: Implement Me!
-        return null;
+    	String finalString = "";
+        String header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>/n<KVCache>/n<Set ID=\"";
+        String setIDend = "\">/n";
+        String ref = "<CacheEntry isReferenced=\"";
+        String valid = " isValid=\"";
+        String validEnd = "\">/n<Key>";
+        String keyEnd = "</Key>/n<Value>";
+        String closing = "</Value>/n</CacheEntry>/n</Set>/n</KVCache>/n";
+        for (int i = 0; i < numSets; i++) {
+        	ArrayList<String[]> keyVal = setToElem.get(i);
+        	int j = 0;
+        	for (; j < keyVal.size(); j++) {
+        		finalString.concat(header + i + setIDend + ref + keyVal.get(j)[2] + valid + "true" + validEnd + keyVal.get(j)[0]
+        			+ keyEnd + keyVal.get(j)[1] + closing);
+        	}
+        	while (j != maxElemsPerSet) {
+        		finalString.concat(header + i + setIDend + ref + keyVal.get(j)[2] + valid + "false" + validEnd + 0
+        			+ keyEnd + 0 + closing); //TODO: if not valid, what's the key/value?
+        		j++;
+        	}
+        		
+        }
+        return finalString;
     }
 }
