@@ -71,7 +71,9 @@ public class ThreadPool {
 	 */
 	public synchronized Runnable getJob() throws InterruptedException {
 		while (pq.isEmpty()) {
-		} // TODO: is this busy waiting okay?
+			pq.wait();
+		}
+		pq.notify();
 		return pq.poll();
 	}
 }
