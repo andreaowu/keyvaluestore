@@ -174,7 +174,7 @@ public class KVCache implements KeyValueInterface {
 		
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
-		locks.put(getSetId(key), true);
+		locks.put(getSetId(key), true); //TODO: notify, or let server notify?
 	}
 	
 	/**
@@ -189,8 +189,8 @@ public class KVCache implements KeyValueInterface {
 			}
 		}
 		locks.put(getSetId(key), false);
-		//WriteLock lock = new WriteLock(); TODO: I don't know how to make a new lock.
-	    return null;
+		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	    return lock.writeLock();
 	}
 	
 	/**
