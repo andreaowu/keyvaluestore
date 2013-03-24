@@ -45,7 +45,6 @@ public class KVCache implements KeyValueInterface {
 	private int numSets = 100;
 	private int maxElemsPerSet = 10;
 	private HashMap<Integer, ArrayList<String[]>> setToElem;
-	private KVStore store;
 	private HashMap<Integer, WriteLock> locks;
 		
 	/**
@@ -63,7 +62,6 @@ public class KVCache implements KeyValueInterface {
 			// TODO: Need to locks.put(i, new WriteLock()); but I don't know how.
 			// WriteLock's constructor is private.
 		}
-		store = new KVStore();
 	}
 
 	/**
@@ -81,14 +79,17 @@ public class KVCache implements KeyValueInterface {
 		for (int i = 0; i < keyVal.size(); i++) {
 			if (keyVal.get(i)[0].equals(key)) {
 				keyVal.get(i)[2] = "1";
+				
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
+				locks.get(getSetId(key)).notify();
 				return keyVal.get(i)[1];
 			}
 		}
 		
 		// Must be called before returning
 		AutoGrader.agCacheGetFinished(key);
+		locks.get(getSetId(key)).notify();
 		return null;
 	}
 
@@ -105,12 +106,6 @@ public class KVCache implements KeyValueInterface {
 		// Must be called before anything else
 		AutoGrader.agCachePutStarted(key, value);
 		AutoGrader.agCachePutDelay();
-
-		try {
-			store.put(key, value);
-		} catch (KVException e) {
-			
-		}
 		
 		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
 		// check whether element is already in set
@@ -124,6 +119,7 @@ public class KVCache implements KeyValueInterface {
 				setToElem.put(getSetId(key), keyVal);
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
+				locks.get(getSetId(key)).notify();
 				return true;
 			}
 		}
@@ -139,6 +135,7 @@ public class KVCache implements KeyValueInterface {
 			setToElem.put(getSetId(key), keyVal);
 			// Must be called before returning
 			AutoGrader.agCacheGetFinished(key);
+			locks.get(getSetId(key)).notify();
 			return false;
 		}
 		
@@ -155,6 +152,7 @@ public class KVCache implements KeyValueInterface {
 		keyVal.add(put);
 		// Must be called before returning
 		AutoGrader.agCachePutFinished(key, value);
+		locks.get(getSetId(key)).notify();
 		return true;
 	}
 
@@ -168,12 +166,6 @@ public class KVCache implements KeyValueInterface {
 		AutoGrader.agCacheGetStarted(key);
 		AutoGrader.agCacheDelDelay();
 		
-		try {
-			store.del(key);
-		} catch (KVException e) {
-			
-		}
-		
 		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
 		for (int i = 0; i < keyVal.size(); i++) {
 			if (keyVal.get(i)[0].equals(key)) {
@@ -184,6 +176,7 @@ public class KVCache implements KeyValueInterface {
 		
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
+		locks.get(getSetId(key)).notify(); //TODO: not sure how to put the lock back
 	}
 	
 	/**
@@ -197,7 +190,6 @@ public class KVCache implements KeyValueInterface {
 			} catch (InterruptedException e) {
 			}
 		}
-		locks.get(getSetId(key)).notify();
 	    return locks.get(getSetId(key));
 	}
 	
