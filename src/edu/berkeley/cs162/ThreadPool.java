@@ -108,10 +108,8 @@ class WorkerThread extends Thread {
 				try {
 					tp.addToQueue(task);
 				} catch (InterruptedException exc) {
-					Thread.currentThread().interrupt();
 				}
 			}
-			Thread.currentThread().interrupt();
 		}
 	}
 }
