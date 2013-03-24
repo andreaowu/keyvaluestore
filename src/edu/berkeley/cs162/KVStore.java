@@ -31,8 +31,9 @@
  */
 package edu.berkeley.cs162;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
-
+import java.io.*;
 
 /**
  * This is a dummy KeyValue Store. Ideally this would go to disk, 
@@ -41,7 +42,7 @@ import java.util.Hashtable;
  *
  */
 public class KVStore implements KeyValueInterface {
-	private Dictionary<String, String> store 	= null;
+	private Dictionary<String, String> store = null;
 	
 	public KVStore() {
 		resetStore();
@@ -104,15 +105,67 @@ public class KVStore implements KeyValueInterface {
 	}
 	
     public String toXML() throws KVException {
-        // TODO: implement me
-        return null;
+        String answer = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<KVStore>\n";
+        String kvPair = "<KVPair>\n<Key>";
+        String keyEnd = "</Key>\n<Value>";
+        String val = "</Value>\n</KVPair>\n";
+        String close = "</KVStore>";
+        for (Enumeration<String> keys = store.keys(); keys.hasMoreElements(); ) {
+        	answer.concat(kvPair + keys.nextElement() + keyEnd + store.get(keys.nextElement()) + val);
+        }
+        answer.concat(close);
+        return answer;
     }        
 
     public void dumpToFile(String fileName) throws KVException {
-        // TODO: implement me
+        String content = toXML();
+        File file = new File(fileName);
+        try {
+	        if (!file.exists()) {
+	        	file.createNewFile();
+	        }
+	        FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write(content);
+			bw.close();
+        } catch (IOException e) {
+        	KVMessage kmsg = new KVMessage("Unknown Error: Could not write to file");
+			throw new KVException(kmsg);
+        }
     }
 
     public void restoreFromFile(String fileName) throws KVException{
-        // TODO: implement me
+        FileInputStream fstream;
+        try {
+        	fstream = new FileInputStream(fileName);
+            DataInputStream in = new DataInputStream(fstream);
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            String readLine;
+            String key =  null;
+            String value = null;
+            while ((readLine = br.readLine()) != null) {
+            	if (key != null && value != null) {
+            		store.put(key, value);
+            		key = null;
+            		value = null;
+            	} else if (readLine.contains("Key")) {
+            		int begin = readLine.indexOf("<Key>") + 5;
+            		int end = readLine.indexOf("</Key>");
+            		key = readLine.substring(begin, end);
+            	} else if (readLine.contains("Value")) {
+            		int begin = readLine.indexOf("<Value>") + 7;
+            		int end = readLine.indexOf("</Value>");
+            		value = readLine.substring(begin, end);
+            	}
+            }
+            in.close();
+        } catch (FileNotFoundException e) {
+        	KVMessage kmsg = new KVMessage("Unknown Error: File to restore not found");
+			throw new KVException(kmsg);
+        } catch (IOException e) {
+        	KVMessage kmsg = new KVMessage("Unknown Error: File to restore I/O exception");
+			throw new KVException(kmsg);
+        }
+        
     }
 }
