@@ -105,8 +105,8 @@ public class KVMessage {
 	    this.msgType = msgType;
 	}
 	
-	public KVMessage(String msgType, String message) throws KVException {
-        if (message == null || message.length() == 0 || (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq")) {
+	public KVMessage(String msgType, String message) throws KVException { //TODO: can the message be null or 0 length?
+        if (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq") {
 	    	this.msgType = "resp";
 	    	setMessage("Message format incorrect");
 	    	throw new KVException(this);
@@ -131,19 +131,30 @@ public class KVMessage {
 	 * @return the XML String
 	 * @throws KVException if not enough data is available to generate a valid KV XML message
 	 * 
-	 * <?xml version="1.0" encoding="UTF-8"?>
-	 * <KVCache>
-  	 * <Set Id="id">
-     * <CacheEntry isReferenced="true/false" isValid="true/false">
-     * <Key>key</Key>
-     * <Value>value</Value>
-     * </CacheEntry>
-  	 * </Set>
- 	 * </KVCache>
 	 */
 	public String toXML() throws KVException {
-        return null;
-	      // TODO: implement me
+		if ( (msgType == "putreq" && (key == null || key.length() == 0 || value == null || value.length() == 0))
+				|| (msgType == "resp" && ((key == null || key.length() == 0 || value == null || value.length() == 0)
+						&& (message == null) )))
+			throw new KVException(this);
+		
+		String answer = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<KVMessage type=\"";
+		String keyBegin = "\">\n<Key>";
+		String keyClose = "</Key>\n";
+		String valueBegin = "<Value>";
+		String valueEnd = "</Value>\n";
+		String messageBegin = "<Message>";
+		String messageEnd = "</Message>";
+		String kvMsg = "</KVMessage>";
+		if (msgType == "getreq" || msgType == "delreq") {
+			return answer.concat(msgType + keyBegin + key + keyClose + kvMsg);
+		} else if (msgType == "putreq" || (msgType == "resp" && key != null && value != null)) {
+			return answer.concat(msgType + keyBegin + key + keyClose + valueBegin + value + valueEnd + kvMsg);
+		} else if (msgType == "resp" && message == "Success") {
+			return answer.concat(msgType + "\">\n" + messageBegin + "Success" + messageEnd + kvMsg);
+		} else {
+			return answer.concat(msgType + "\">\n" + messageBegin + "Error Message" + messageEnd + kvMsg);
+		}
 	}
 	
 	public void sendMessage(Socket sock) throws KVException {
