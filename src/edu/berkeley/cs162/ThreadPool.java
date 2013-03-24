@@ -29,12 +29,15 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.berkeley.cs162;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class ThreadPool {
+	
 	/**
 	 * Set of threads in the threadpool
 	 */
 	protected Thread threads[] = null;
+	protected PriorityBlockingQueue<Runnable> pq;
 
 	/**
 	 * Initialize the number of threads required in the threadpool. 
@@ -43,7 +46,12 @@ public class ThreadPool {
 	 */
 	public ThreadPool(int size)
 	{      
-	    // TODO: implement me
+	    threads = new Thread[size];
+	    for (int i = 0; i < size; i++) {
+	    	threads[i] = new WorkerThread(this);
+	    	threads[i].start();
+	    }
+	    pq = new PriorityBlockingQueue<Runnable>();
 	}
 
 	/**
@@ -52,9 +60,10 @@ public class ThreadPool {
 	 * @param r job that has to be executed asynchronously
 	 * @throws InterruptedException 
 	 */
-	public void addToQueue(Runnable r) throws InterruptedException
-	{
-	      // TODO: implement me
+	public void addToQueue(Runnable r) throws InterruptedException {
+		synchronized (pq) {
+			pq.add(r);
+		}
 	}
 	
 	/** 
@@ -63,8 +72,7 @@ public class ThreadPool {
 	 * @throws InterruptedException 
 	 */
 	public synchronized Runnable getJob() throws InterruptedException {
-	      // TODO: implement me
-	    return null;
+		return pq.take();
 	}
 }
 
@@ -77,16 +85,31 @@ class WorkerThread extends Thread {
 	 * 
 	 * @param o the thread pool 
 	 */
+	
+	protected ThreadPool tp;
+	
 	WorkerThread(ThreadPool o)
 	{
-	     // TODO: implement me
+	     tp = o;
 	}
 
 	/**
 	 * Scan for and execute tasks.
 	 */
-	public void run()
-	{
-	      // TODO: implement me
+	public void run() {
+		Runnable task = null;
+		try {
+			while (true)
+				task = tp.getJob();
+		} catch (InterruptedException e) {
+			if (task != null) {
+				try {
+					tp.addToQueue(task);
+				} catch (InterruptedException exc) {
+					Thread.currentThread().interrupt();
+				}
+			}
+			Thread.currentThread().interrupt();
+		}
 	}
 }
