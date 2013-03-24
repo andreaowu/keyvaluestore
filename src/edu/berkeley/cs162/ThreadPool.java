@@ -29,7 +29,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.berkeley.cs162;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.PriorityQueue;
 
 public class ThreadPool {
 	
@@ -37,7 +37,7 @@ public class ThreadPool {
 	 * Set of threads in the threadpool
 	 */
 	protected Thread threads[] = null;
-	protected PriorityBlockingQueue<Runnable> pq;
+	protected PriorityQueue<Runnable> pq;
 
 	/**
 	 * Initialize the number of threads required in the threadpool. 
@@ -51,7 +51,7 @@ public class ThreadPool {
 	    	threads[i] = new WorkerThread(this);
 	    	threads[i].start();
 	    }
-	    pq = new PriorityBlockingQueue<Runnable>();
+	    pq = new PriorityQueue<Runnable>();
 	}
 
 	/**
@@ -61,9 +61,7 @@ public class ThreadPool {
 	 * @throws InterruptedException 
 	 */
 	public void addToQueue(Runnable r) throws InterruptedException {
-		synchronized (pq) {
-			pq.add(r);
-		}
+		pq.add(r);
 	}
 	
 	/** 
@@ -72,7 +70,9 @@ public class ThreadPool {
 	 * @throws InterruptedException 
 	 */
 	public synchronized Runnable getJob() throws InterruptedException {
-		return pq.take();
+		while (pq.isEmpty()) {
+		} // TODO: is this busy waiting okay?
+		return pq.poll();
 	}
 }
 
