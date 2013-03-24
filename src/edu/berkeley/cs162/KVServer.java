@@ -58,31 +58,90 @@ public class KVServer implements KeyValueInterface {
 	public boolean put(String key, String value) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerPutStarted(key, value);
-
-		// TODO: implement me
-
+		
+		if (key.length() > MAX_KEY_SIZE) {
+			KVMessage kmsg = new KVMessage("Oversized key");
+			// Must be called before returning
+			AutoGrader.agKVServerPutFinished(key, value);
+			throw new KVException(kmsg);
+		} else if (value.length() > MAX_VAL_SIZE) {
+			KVMessage kmsg = new KVMessage("Oversized value");
+			// Must be called before returning
+			AutoGrader.agKVServerPutFinished(key, value);
+			throw new KVException(kmsg);
+		}
+		
+		boolean cache = dataCache.put(key, value); 
+		if (!cache) {
+			// Must be called before returning
+			AutoGrader.agKVServerPutFinished(key, value);
+			return false;
+		}
+		boolean store;
+		try {
+			store = dataStore.put(key, value);
+		} catch (KVException e) {
+			KVMessage kmsg = new KVMessage("I/O Error");
+			// Must be called before returning
+			AutoGrader.agKVServerGetFinished(key);
+			throw new KVException(kmsg);
+		}
 		// Must be called before returning
 		AutoGrader.agKVServerPutFinished(key, value);
-		return false;
+		return store;
 	}
 	
 	public String get (String key) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerGetStarted(key);
 
-		// TODO: implement me
-
+		if (key.length() > MAX_KEY_SIZE) {
+			KVMessage kmsg = new KVMessage("Oversized key");
+			// Must be called before returning
+			AutoGrader.agKVServerGetFinished(key);
+			throw new KVException(kmsg);
+		}
+		
+		String store = dataStore.get(key);
+		if (store != null) {
+			// Must be called before returning
+			AutoGrader.agKVServerGetFinished(key);
+			return store;
+		}
+		String cache = dataCache.get(key);
+		if (cache == null) {
+			KVMessage kmsg = new KVMessage("Does not exist");
+			// Must be called before returning
+			AutoGrader.agKVServerGetFinished(key);
+			throw new KVException(kmsg);
+		}
+		
 		// Must be called before returning
 		AutoGrader.agKVServerGetFinished(key);
-		return null;
+		return cache;
 	}
 	
 	public void del (String key) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerDelStarted(key);
 
-		// TODO: implement me
-
+		if (key.length() > MAX_KEY_SIZE) {
+			KVMessage kmsg = new KVMessage("Oversized key");
+			// Must be called before returning
+			AutoGrader.agKVServerDelFinished(key);
+			throw new KVException(kmsg);
+		}
+		
+		try {
+			get(key);
+			dataStore.del(key);
+			dataCache.del(key);
+		} catch (KVException e) {
+			KVMessage kmsg = new KVMessage("Does not exist");
+			// Must be called before returning
+			AutoGrader.agKVServerDelFinished(key);
+			throw new KVException(kmsg);
+		}
 		// Must be called before returning
 		AutoGrader.agKVServerDelFinished(key);
 	}
