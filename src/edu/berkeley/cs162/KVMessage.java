@@ -97,29 +97,49 @@ public class KVMessage {
 	 * @throws KVException of type "resp" with message "Message format incorrect" if msgType is unknown
 	 */
 	public KVMessage(String msgType) throws KVException {
-	    // TODO: implement me
+	    if (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq") {
+	    	this.msgType = "resp";
+	    	setMessage("Message format incorrect");
+	    	throw new KVException(this);
+	    }
+	    this.msgType = msgType;
 	}
 	
 	public KVMessage(String msgType, String message) throws KVException {
-        // TODO: implement me
+        if (message == null || message.length() == 0 || (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq")) {
+	    	this.msgType = "resp";
+	    	setMessage("Message format incorrect");
+	    	throw new KVException(this);
+        }
+        this.msgType = msgType;
+        setMessage(message);
 	}
 	
 	 /***
      * Parse KVMessage from incoming network connection
      * @param sock
-     * @throws KVException if there is an error in parsing the message. The exception should be of type "resp and message should be :
+     * @throws KVException if there is an error in parsing the message. The exception should be of type "resp" and message should be:
      * a. "XML Error: Received unparseable message" - if the received message is not valid XML.
      * b. "Network Error: Could not receive data" - if there is a network error causing an incomplete parsing of the message.
      * c. "Message format incorrect" - if there message does not conform to the required specifications. Examples include incorrect message type. 
      */
 	public KVMessage(InputStream input) throws KVException {
-	     // TODO: implement me
 	}
 	
 	/**
 	 * Generate the XML representation for this message.
 	 * @return the XML String
 	 * @throws KVException if not enough data is available to generate a valid KV XML message
+	 * 
+	 * <?xml version="1.0" encoding="UTF-8"?>
+	 * <KVCache>
+  	 * <Set Id="id">
+     * <CacheEntry isReferenced="true/false" isValid="true/false">
+     * <Key>key</Key>
+     * <Value>value</Value>
+     * </CacheEntry>
+  	 * </Set>
+ 	 * </KVCache>
 	 */
 	public String toXML() throws KVException {
         return null;
