@@ -62,6 +62,7 @@ public class ThreadPool {
 	 */
 	public void addToQueue(Runnable r) throws InterruptedException {
 		pq.add(r);
+		pq.notifyAll();
 	}
 	
 	/** 
@@ -73,7 +74,6 @@ public class ThreadPool {
 		while (pq.isEmpty()) {
 			pq.wait();
 		}
-		pq.notify();
 		return pq.poll();
 	}
 }
