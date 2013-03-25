@@ -40,10 +40,10 @@ import edu.berkeley.cs162.SocketServer;
 public class Server {
 	static KVServer key_server = null;
 	static SocketServer server = null;
-	
+
 	/**
 	 * @param args
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
 		System.out.println("Binding Server:");
