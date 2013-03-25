@@ -32,6 +32,9 @@ package edu.berkeley.cs162;
 
 import java.io.FilterInputStream;
 import java.io.InputStream;
+import java.io.DataInputStream;
+import java.io.OutputStream;
+import java.io.IOException;
 import java.net.Socket;
 
 
@@ -43,7 +46,7 @@ public class KVMessage {
 	private String msgType = null;
 	private String key = null;
 	private String value = null;
-	private String status = null;
+	private String status = null; //TODO: what is status?
 	private String message = null;
 	
 	public final String getKey() {
@@ -124,6 +127,18 @@ public class KVMessage {
      * c. "Message format incorrect" - if there message does not conform to the required specifications. Examples include incorrect message type. 
      */
 	public KVMessage(InputStream input) throws KVException {
+		//TODO: incomplete implementation...too lazy to figure out how to actually parse it
+	    DataInputStream dis = new DataInputStream(input);
+	    try {
+	    	int len = dis.readInt();
+		    byte[] data = new byte[len];
+		    if (len > 0) {
+		        dis.readFully(data);
+		    }
+	    } catch (IOException e) {
+	    	
+	    }
+	    
 	}
 	
 	/**
@@ -158,6 +173,18 @@ public class KVMessage {
 	}
 	
 	public void sendMessage(Socket sock) throws KVException {
-	      // TODO: implement me
+	    String sendString = toXML();
+	    byte[] send = new byte[256];
+	    for (int i = 0; i < 256; i++)
+	    	send[i] = (byte) sendString.charAt(i);
+	    try {
+	    	OutputStream out = sock.getOutputStream();
+	    	out.write(send);
+	    	out.close();
+	    	sock.close();
+	    } catch (IOException e) {
+	    	KVMessage kmsg = new KVMessage("Network Error: Could not send data");
+			throw new KVException(kmsg);
+	    }
 	}
 }
