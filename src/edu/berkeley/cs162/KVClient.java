@@ -32,6 +32,7 @@
 package edu.berkeley.cs162;
 
 import java.net.Socket;
+import java.net.InetSocketAddress;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -61,6 +62,8 @@ public class KVClient implements KeyValueInterface {
 	private Socket connectHost() throws KVException {
 		try {
 			skt = new Socket(server, port);
+			InetSocketAddress addr = new InetSocketAddress(server, port);
+			skt.connect(addr);
 			return skt;
 		} catch (UnknownHostException e) {
 			KVMessage kmsg = new KVMessage("Network Error: Could not connect");
@@ -86,8 +89,19 @@ public class KVClient implements KeyValueInterface {
 	    msg.setKey(key);
 	    msg.setValue(value);
 	    msg.sendMessage(sock);
+	    try {
+	    	KVMessage msgReturned = new KVMessage(sock.getInputStream());
+	    	if (msgReturned.getMessage() != "Error Message") {
+	    		if (msgReturned.getStatus() == "true") {
+	    			closeHost(sock);
+	    			return true;
+	    		}
+	    	}
+	    } catch (IOException e) {
+	    	
+	    }
 	    closeHost(sock);
-	    return true;
+	    return false;
 	}
 
 
@@ -96,6 +110,15 @@ public class KVClient implements KeyValueInterface {
 	    KVMessage msg = new KVMessage("getreq");
 	    msg.setKey(key);
 	    msg.sendMessage(sock);
+	    try {
+	    	KVMessage msgReturned = new KVMessage(sock.getInputStream());
+	    	if (msgReturned.getMessage() != "Error Message") {
+	    		closeHost(sock);
+	    		return msgReturned.getValue();	    		
+	    	}
+	    } catch (IOException e) {
+	    	
+	    }
 	    closeHost(sock);
 	    return null;
 	}
@@ -105,6 +128,13 @@ public class KVClient implements KeyValueInterface {
 		KVMessage msg = new KVMessage("delreq");
 		msg.setKey(key);
 		msg.sendMessage(sock);
+	    try {
+	    	KVMessage msgReturned = new KVMessage(sock.getInputStream());
+	    	if (msgReturned.getMessage() != "Error Message")
+	    		return;
+	    } catch (IOException e) {
+	    	
+	    }
 	    closeHost(sock);
 	}	
 }
