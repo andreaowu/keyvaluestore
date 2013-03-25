@@ -32,38 +32,57 @@ package edu.berkeley.cs162;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
-/** 
- * This is an generic class that should handle all TCP network connections 
- * arriving on a given unique (host, port) tuple. Ensure that this class 
- * remains generic by providing the connection handling logic in a NetworkHandler
+/**
+ * This is an generic class that should handle all TCP network connections
+ * arriving on a given unique (host, port) tuple. Ensure that this class remains
+ * generic by providing the connection handling logic in a NetworkHandler
+ * 
+ * A socket server either allows or rejects the requested connection based on
+ * the destination or user identification.
  */
 public class SocketServer {
 	String hostname;
 	int port;
 	NetworkHandler handler;
 	ServerSocket server;
-	
+	Socket connection;
+
 	public SocketServer(String hostname, int port) {
 		this.hostname = hostname;
 		this.port = port;
 	}
-	
+
 	public void connect() throws IOException {
-	      // TODO: implement me
+		server = new ServerSocket(port);
+		connection = server.accept();
 	}
-	
+
 	/**
-	 * Accept requests and service them asynchronously. 
-	 * @throws IOException if there is a network error (for instance if the socket is inadvertently closed) 
+	 * Accept requests and service them asynchronously.
+	 * 
+	 * @throws IOException
+	 *             if there is a network error (for instance if the socket is
+	 *             inadvertently closed)
 	 */
 	public void run() throws IOException {
-	      // TODO: implement me
+		connect();
+		try {
+			KVMessage received = new KVMessage(connection.getInputStream());
+			received.sendMessage(connection);
+		} catch (KVException e) {
+
+		}
+		stop();
+		closeSocket();
 	}
-	
-	/** 
+
+	/**
 	 * Add the network handler for the current socket server
-	 * @param handler is logic for servicing a network connection
+	 * 
+	 * @param handler
+	 *            is logic for servicing a network connection
 	 */
 	public void addHandler(NetworkHandler handler) {
 		this.handler = handler;
@@ -73,14 +92,18 @@ public class SocketServer {
 	 * Stop the ServerSocket
 	 */
 	public void stop() {
-	      // TODO: implement me
+		// TODO: implement me
 	}
-	
+
 	private void closeSocket() {
-	     // TODO: implement me
+		try {
+			server.close();
+		} catch (IOException e) {
+			// TODO: what to do here?
+		}
 	}
-	
-	protected void finalize(){
+
+	protected void finalize() {
 		closeSocket();
 	}
 }
