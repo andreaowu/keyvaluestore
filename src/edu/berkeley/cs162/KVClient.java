@@ -32,7 +32,6 @@
 package edu.berkeley.cs162;
 
 import java.net.Socket;
-import java.net.InetSocketAddress;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -48,7 +47,7 @@ public class KVClient implements KeyValueInterface {
 
 	private String server = null;
 	private int port = 0;
-	private Socket skt;
+	private Socket connection;
 	
 	/**
 	 * @param server is the DNS reference to the Key-Value server
@@ -61,10 +60,8 @@ public class KVClient implements KeyValueInterface {
 	
 	private Socket connectHost() throws KVException {
 		try {
-			skt = new Socket(server, port);
-			InetSocketAddress addr = new InetSocketAddress(server, port);
-			skt.connect(addr);
-			return skt;
+			connection = new Socket(server, port);
+			return connection;
 		} catch (UnknownHostException e) {
 			KVMessage kmsg = new KVMessage("Network Error: Could not connect");
 			throw new KVException(kmsg);
@@ -98,12 +95,11 @@ public class KVClient implements KeyValueInterface {
 	    		}
 	    	}
 	    } catch (IOException e) {
-	    	
+	    	//TODO: not sure what to do here
 	    }
 	    closeHost(sock);
 	    return false;
 	}
-
 
 	public String get(String key) throws KVException {
 	    Socket sock = connectHost();
