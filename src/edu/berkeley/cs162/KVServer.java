@@ -31,22 +31,23 @@
 package edu.berkeley.cs162;
 
 /**
- * This class defines the slave key value servers. Each individual KVServer 
- * would be a fully functioning Key-Value server. For Project 3, you would 
- * implement this class. For Project 4, you will have a Master Key-Value server 
- * and multiple of these slave Key-Value servers, each of them catering to a 
+ * This class defines the slave key value servers. Each individual KVServer
+ * would be a fully functioning Key-Value server. For Project 3, you would
+ * implement this class. For Project 4, you will have a Master Key-Value server
+ * and multiple of these slave Key-Value servers, each of them catering to a
  * different part of the key namespace.
- *
+ * 
  */
 public class KVServer implements KeyValueInterface {
 	private KVStore dataStore = null;
 	private KVCache dataCache = null;
-	
+
 	private static final int MAX_KEY_SIZE = 256;
 	private static final int MAX_VAL_SIZE = 256 * 1024;
-	
+
 	/**
-	 * @param numSets number of sets in the data Cache.
+	 * @param numSets
+	 *            number of sets in the data Cache.
 	 */
 	public KVServer(int numSets, int maxElemsPerSet) {
 		dataStore = new KVStore();
@@ -54,11 +55,11 @@ public class KVServer implements KeyValueInterface {
 
 		AutoGrader.registerKVServer(dataStore, dataCache);
 	}
-	
+
 	public boolean put(String key, String value) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerPutStarted(key, value);
-		
+
 		if (key.length() > MAX_KEY_SIZE) {
 			KVMessage kmsg = new KVMessage("Oversized key");
 			// Must be called before returning
@@ -70,8 +71,8 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerPutFinished(key, value);
 			throw new KVException(kmsg);
 		}
-		
-		boolean cache = dataCache.put(key, value); 
+
+		boolean cache = dataCache.put(key, value);
 		if (!cache) {
 			// Must be called before returning
 			AutoGrader.agKVServerPutFinished(key, value);
@@ -90,8 +91,8 @@ public class KVServer implements KeyValueInterface {
 		AutoGrader.agKVServerPutFinished(key, value);
 		return store;
 	}
-	
-	public String get (String key) throws KVException {
+
+	public String get(String key) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerGetStarted(key);
 
@@ -101,7 +102,7 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerGetFinished(key);
 			throw new KVException(kmsg);
 		}
-		
+
 		String store = dataStore.get(key);
 		if (store != null) {
 			// Must be called before returning
@@ -115,13 +116,13 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerGetFinished(key);
 			throw new KVException(kmsg);
 		}
-		
+
 		// Must be called before returning
 		AutoGrader.agKVServerGetFinished(key);
 		return cache;
 	}
-	
-	public void del (String key) throws KVException {
+
+	public void del(String key) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerDelStarted(key);
 
@@ -131,7 +132,7 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerDelFinished(key);
 			throw new KVException(kmsg);
 		}
-		
+
 		try {
 			get(key);
 			dataStore.del(key);

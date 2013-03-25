@@ -38,46 +38,52 @@ import java.util.ArrayList;
 
 /**
  * A set-associate cache which has a fixed maximum number of sets (numSets).
- * Each set has a maximum number of elements (MAX_ELEMS_PER_SET).
- * If a set is full and another entry is added, an entry is dropped based on the eviction policy.
+ * Each set has a maximum number of elements (MAX_ELEMS_PER_SET). If a set is
+ * full and another entry is added, an entry is dropped based on the eviction
+ * policy.
  */
-public class KVCache implements KeyValueInterface {	
+public class KVCache implements KeyValueInterface {
 	private int numSets = 100;
 	private int maxElemsPerSet = 10;
 	private HashMap<Integer, ArrayList<String[]>> setToElem;
-	private HashMap<Integer, Boolean> locks; // true whether lock available
-		
+	private HashMap<Integer, Boolean> locks; // true for lock available
+
 	/**
 	 * Creates a new LRU cache.
-	 * @param cacheSize	the maximum number of entries that will be kept in this cache.
+	 * 
+	 * @param cacheSize
+	 *            the maximum number of entries that will be kept in this cache.
 	 */
 	public KVCache(int numSets, int maxElemsPerSet) {
 		this.numSets = numSets;
-		this.maxElemsPerSet = maxElemsPerSet;     
+		this.maxElemsPerSet = maxElemsPerSet;
 		setToElem = new HashMap<Integer, ArrayList<String[]>>();
 		locks = new HashMap<Integer, Boolean>();
 		for (int i = 0; i < numSets; i++) {
-			setToElem.put(i, new ArrayList<String[]>());	// String[0]: key	String[1]: value	String[2]: use bit
+			setToElem.put(i, new ArrayList<String[]>()); // String[0]: key 	String[1]: value 	String[2]: use bit
 			locks.put(i, true);
 		}
 	}
 
 	/**
-	 * Retrieves an entry from the cache.
-	 * Assumes the corresponding set has already been locked for writing.
-	 * @param key the key whose associated value is to be returned.
-	 * @return the value associated to this key, or null if no value with this key exists in the cache.
+	 * Retrieves an entry from the cache. Assumes the corresponding set has
+	 * already been locked for writing.
+	 * 
+	 * @param key
+	 *            the key whose associated value is to be returned.
+	 * @return the value associated to this key, or null if no value with this
+	 *         key exists in the cache.
 	 */
 	public String get(String key) {
 		// Must be called before anything else
 		AutoGrader.agCacheGetStarted(key);
 		AutoGrader.agCacheGetDelay();
-        
+
 		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
 		for (int i = 0; i < keyVal.size(); i++) {
 			if (keyVal.get(i)[0].equals(key)) {
 				keyVal.get(i)[2] = "1";
-				
+
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
 				locks.put(getSetId(key), true);
@@ -85,7 +91,7 @@ public class KVCache implements KeyValueInterface {
 				return keyVal.get(i)[1];
 			}
 		}
-		
+
 		// Must be called before returning
 		AutoGrader.agCacheGetFinished(key);
 		locks.put(getSetId(key), true);
@@ -94,26 +100,30 @@ public class KVCache implements KeyValueInterface {
 	}
 
 	/**
-	 * Adds an entry to this cache.
-	 * If an entry with the specified key already exists in the cache, it is replaced by the new entry.
-	 * If the cache is full, an entry is removed from the cache based on the eviction policy
+	 * Adds an entry to this cache. If an entry with the specified key already
+	 * exists in the cache, it is replaced by the new entry. If the cache is
+	 * full, an entry is removed from the cache based on the eviction policy
 	 * Assumes the corresponding set has already been locked for writing.
-	 * @param key	the key with which the specified value is to be associated.
-	 * @param value	a value to be associated with the specified key.
-	 * @return true is something has been overwritten 
+	 * 
+	 * @param key
+	 *            the key with which the specified value is to be associated.
+	 * @param value
+	 *            a value to be associated with the specified key.
+	 * @return true is something has been overwritten
 	 */
 	public boolean put(String key, String value) {
 		// Must be called before anything else
 		AutoGrader.agCachePutStarted(key, value);
 		AutoGrader.agCachePutDelay();
-		
+
 		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
 		// check whether element is already in set
 		for (int i = 0; i < keyVal.size(); i++) {
 			if (keyVal.get(i)[0].equals(key)) {
 				String[] changeThis = keyVal.get(i);
 				changeThis[1] = value;
-				changeThis[2] = "0"; //TODO: if put in a new one over an old one, reference bit is 0?
+				changeThis[2] = "0"; // TODO: if put in a new one over an old
+										// one, reference bit is 0?
 				keyVal.remove(i);
 				keyVal.add(i, changeThis);
 				setToElem.put(getSetId(key), keyVal);
@@ -124,13 +134,13 @@ public class KVCache implements KeyValueInterface {
 				return true;
 			}
 		}
-		
+
 		String[] put = new String[3];
 		put[0] = key;
 		put[1] = value;
 		put[2] = "0";
 		keyVal.add(put);
-		
+
 		if (keyVal.size() < maxElemsPerSet) {
 			// insert new key value pair
 			setToElem.put(getSetId(key), keyVal);
@@ -140,7 +150,7 @@ public class KVCache implements KeyValueInterface {
 			locks.get(getSetId(key)).notify();
 			return false;
 		}
-		
+
 		String[] check = keyVal.get(0);
 		// overwrite value
 		while (check[3] != "0") {
@@ -160,15 +170,17 @@ public class KVCache implements KeyValueInterface {
 	}
 
 	/**
-	 * Removes an entry from this cache.
-	 * Assumes the corresponding set has already been locked for writing.
-	 * @param key	the key with which the specified value is to be associated.
+	 * Removes an entry from this cache. Assumes the corresponding set has
+	 * already been locked for writing.
+	 * 
+	 * @param key
+	 *            the key with which the specified value is to be associated.
 	 */
-	public void del (String key) {
+	public void del(String key) {
 		// Must be called before anything else
 		AutoGrader.agCacheGetStarted(key);
 		AutoGrader.agCacheDelDelay();
-		
+
 		ArrayList<String[]> keyVal = setToElem.get(getSetId(key));
 		for (int i = 0; i < keyVal.size(); i++) {
 			if (keyVal.get(i)[0].equals(key)) {
@@ -176,16 +188,16 @@ public class KVCache implements KeyValueInterface {
 				break;
 			}
 		}
-		
+
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
-		locks.put(getSetId(key), true); //TODO: notify, or let server notify?
+		locks.put(getSetId(key), true); // TODO: notify, or let server notify?
 		locks.get(getSetId(key)).notify();
 	}
-	
+
 	/**
 	 * @param key
-	 * @return	the write lock of the set that contains key.
+	 * @return the write lock of the set that contains key.
 	 */
 	public WriteLock getWriteLock(String key) {
 		while (!locks.get(getSetId(key))) {
@@ -196,41 +208,45 @@ public class KVCache implements KeyValueInterface {
 		}
 		locks.put(getSetId(key), false);
 		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	    return lock.writeLock();
+		return lock.writeLock();
 	}
-	
+
 	/**
 	 * 
 	 * @param key
-	 * @return	set of the key
+	 * @return set of the key
 	 */
 	private int getSetId(String key) {
 		return Math.abs(key.hashCode()) % numSets;
 	}
-	
-    public String toXML() {
-    	String finalString = "";
-        String header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>/n<KVCache>/n<Set ID=\"";
-        String setIDend = "\">/n";
-        String ref = "<CacheEntry isReferenced=\"";
-        String valid = " isValid=\"";
-        String validEnd = "\">/n<Key>";
-        String keyEnd = "</Key>/n<Value>";
-        String closing = "</Value>/n</CacheEntry>/n</Set>/n</KVCache>/n";
-        for (int i = 0; i < numSets; i++) {
-        	ArrayList<String[]> keyVal = setToElem.get(i);
-        	int j = 0;
-        	for (; j < keyVal.size(); j++) {
-        		finalString.concat(header + i + setIDend + ref + keyVal.get(j)[2] + valid + "true" + validEnd + keyVal.get(j)[0]
-        			+ keyEnd + keyVal.get(j)[1] + closing);
-        	}
-        	while (j != maxElemsPerSet) {
-        		finalString.concat(header + i + setIDend + ref + keyVal.get(j)[2] + valid + "false" + validEnd + 0
-        			+ keyEnd + 0 + closing); //TODO: if not valid, what's the key/value?
-        		j++;
-        	}
-        		
-        }
-        return finalString;
-    }
+
+	public String toXML() {
+		String finalString = "";
+		String header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>/n<KVCache>/n<Set ID=\"";
+		String setIDend = "\">/n";
+		String ref = "<CacheEntry isReferenced=\"";
+		String valid = " isValid=\"";
+		String validEnd = "\">/n<Key>";
+		String keyEnd = "</Key>/n<Value>";
+		String closing = "</Value>/n</CacheEntry>/n</Set>/n</KVCache>/n";
+		for (int i = 0; i < numSets; i++) {
+			ArrayList<String[]> keyVal = setToElem.get(i);
+			int j = 0;
+			for (; j < keyVal.size(); j++) {
+				finalString.concat(header + i + setIDend + ref
+						+ keyVal.get(j)[2] + valid + "true" + validEnd
+						+ keyVal.get(j)[0] + keyEnd + keyVal.get(j)[1]
+						+ closing);
+			}
+			while (j != maxElemsPerSet) {
+				finalString.concat(header + i + setIDend + ref
+						+ keyVal.get(j)[2] + valid + "false" + validEnd + 0
+						+ keyEnd + 0 + closing); // TODO: if not valid, what's
+													// the key/value?
+				j++;
+			}
+
+		}
+		return finalString;
+	}
 }

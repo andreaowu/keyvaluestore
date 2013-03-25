@@ -35,29 +35,32 @@ import java.net.Socket;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
-
 /**
- * This class is used to communicate with (appropriately marshalling and unmarshalling) 
- * objects implementing the KeyValueInterface.
- *
- * @param <K> Java Generic type for the Key
- * @param <V> Java Generic type for the Value
+ * This class is used to communicate with (appropriately marshalling and
+ * unmarshalling) objects implementing the KeyValueInterface.
+ * 
+ * @param <K>
+ *            Java Generic type for the Key
+ * @param <V>
+ *            Java Generic type for the Value
  */
 public class KVClient implements KeyValueInterface {
 
 	private String server = null;
 	private int port = 0;
 	private Socket connection;
-	
+
 	/**
-	 * @param server is the DNS reference to the Key-Value server
-	 * @param port is the port on which the Key-Value server is listening
+	 * @param server
+	 *            is the DNS reference to the Key-Value server
+	 * @param port
+	 *            is the port on which the Key-Value server is listening
 	 */
 	public KVClient(String server, int port) {
 		this.server = server;
 		this.port = port;
 	}
-	
+
 	private Socket connectHost() throws KVException {
 		try {
 			connection = new Socket(server, port);
@@ -70,67 +73,67 @@ public class KVClient implements KeyValueInterface {
 			throw new KVException(kmsg);
 		}
 	}
-	
+
 	private void closeHost(Socket sock) throws KVException {
-	    try {
-	    	sock.close();
-	    } catch (IOException e) {
-	    	KVMessage kmsg = new KVMessage("Unknown Error: Could not closeHost");
+		try {
+			sock.close();
+		} catch (IOException e) {
+			KVMessage kmsg = new KVMessage("Unknown Error: Could not closeHost");
 			throw new KVException(kmsg);
-	    }
+		}
 	}
-	
+
 	public boolean put(String key, String value) throws KVException {
-	    Socket sock = connectHost();
-	    KVMessage msg = new KVMessage("putreq");
-	    msg.setKey(key);
-	    msg.setValue(value);
-	    msg.sendMessage(sock);
-	    try {
-	    	KVMessage msgReturned = new KVMessage(sock.getInputStream());
-	    	if (msgReturned.getMessage() != "Error Message") {
-	    		if (msgReturned.getStatus() == "true") {
-	    			closeHost(sock);
-	    			return true;
-	    		}
-	    	}
-	    } catch (IOException e) {
-	    	//TODO: not sure what to do here
-	    }
-	    closeHost(sock);
-	    return false;
+		Socket sock = connectHost();
+		KVMessage msg = new KVMessage("putreq");
+		msg.setKey(key);
+		msg.setValue(value);
+		msg.sendMessage(sock);
+		try {
+			KVMessage msgReturned = new KVMessage(sock.getInputStream());
+			if (msgReturned.getMessage() != "Error Message") {
+				if (msgReturned.getStatus() == "true") {
+					closeHost(sock);
+					return true;
+				}
+			}
+		} catch (IOException e) {
+			// TODO: not sure what to do here
+		}
+		closeHost(sock);
+		return false;
 	}
 
 	public String get(String key) throws KVException {
-	    Socket sock = connectHost();
-	    KVMessage msg = new KVMessage("getreq");
-	    msg.setKey(key);
-	    msg.sendMessage(sock);
-	    try {
-	    	KVMessage msgReturned = new KVMessage(sock.getInputStream());
-	    	if (msgReturned.getMessage() != "Error Message") {
-	    		closeHost(sock);
-	    		return msgReturned.getValue();	    		
-	    	}
-	    } catch (IOException e) {
-	    	
-	    }
-	    closeHost(sock);
-	    return null;
+		Socket sock = connectHost();
+		KVMessage msg = new KVMessage("getreq");
+		msg.setKey(key);
+		msg.sendMessage(sock);
+		try {
+			KVMessage msgReturned = new KVMessage(sock.getInputStream());
+			if (msgReturned.getMessage() != "Error Message") {
+				closeHost(sock);
+				return msgReturned.getValue();
+			}
+		} catch (IOException e) {
+
+		}
+		closeHost(sock);
+		return null;
 	}
-	
+
 	public void del(String key) throws KVException {
 		Socket sock = connectHost();
 		KVMessage msg = new KVMessage("delreq");
 		msg.setKey(key);
 		msg.sendMessage(sock);
-	    try {
-	    	KVMessage msgReturned = new KVMessage(sock.getInputStream());
-	    	if (msgReturned.getMessage() != "Error Message")
-	    		return;
-	    } catch (IOException e) {
-	    	
-	    }
-	    closeHost(sock);
-	}	
+		try {
+			KVMessage msgReturned = new KVMessage(sock.getInputStream());
+			if (msgReturned.getMessage() != "Error Message")
+				return;
+		} catch (IOException e) {
+
+		}
+		closeHost(sock);
+	}
 }
