@@ -34,14 +34,14 @@ import java.io.IOException;
 import java.net.Socket;
 
 /**
- * This NetworkHandler will asynchronously handle the socket connections. 
- * It uses a threadpool to ensure that none of it's methods are blocking.
- *
+ * This NetworkHandler will asynchronously handle the socket connections. It
+ * uses a threadpool to ensure that none of it's methods are blocking.
+ * 
  */
 public class KVClientHandler implements NetworkHandler {
 	private KVServer kv_Server = null;
 	private ThreadPool threadpool = null;
-	
+
 	public KVClientHandler(KVServer kvServer) {
 		initialize(kvServer, 1);
 	}
@@ -52,26 +52,43 @@ public class KVClientHandler implements NetworkHandler {
 
 	private void initialize(KVServer kvServer, int connections) {
 		this.kv_Server = kvServer;
-		threadpool = new ThreadPool(connections);	
+		threadpool = new ThreadPool(connections);
 	}
-	
 
 	private class ClientHandler implements Runnable {
 		private KVServer kvServer = null;
 		private Socket client = null;
-		
-		@Override
-		public void run() {
-		     // TODO: Implement Me!
-		}
-		
+
 		public ClientHandler(KVServer kvServer, Socket client) {
 			this.kvServer = kvServer;
 			this.client = client;
 		}
+		
+		@Override
+		public void run() {
+			try {
+				KVMessage msg = new KVMessage(client.getInputStream());
+				if (msg.getMsgType() == "getreq")
+					kvServer.get(msg.getKey());
+				else if (msg.getMsgType() == "putreq")
+					msg.setStatus("" + kvServer.put(msg.getKey(), msg.getValue()));
+				else
+					kvServer.del(msg.getKey());
+				msg.sendMessage(client);
+			} catch (IOException e) {
+				
+			} catch (KVException e) {
+				
+			}
+
+		}
+
+
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see edu.berkeley.cs162.NetworkHandler#handle(java.net.Socket)
 	 */
 	@Override
