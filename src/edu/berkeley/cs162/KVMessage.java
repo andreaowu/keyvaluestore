@@ -30,9 +30,11 @@
  */
 package edu.berkeley.cs162;
 
+import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.InputStream;
 import java.io.DataInputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -127,18 +129,79 @@ public class KVMessage {
      * c. "Message format incorrect" - if there message does not conform to the required specifications. Examples include incorrect message type. 
      */
 	public KVMessage(InputStream input) throws KVException {
-		//TODO: incomplete implementation...too lazy to figure out how to actually parse it
-	    DataInputStream dis = new DataInputStream(input);
-	    try {
-	    	int len = dis.readInt();
-		    byte[] data = new byte[len];
-		    if (len > 0) {
-		        dis.readFully(data);
-		    }
-	    } catch (IOException e) {
-	    	
-	    }
-	    
+    	//read stream with BufferedReader
+    	BufferedReader br = new BufferedReader(new InputStreamReader(input));
+    	StringBuilder sb = new StringBuilder();
+    	int counter = 0;
+    	try {
+	    	String line = br.readLine();
+	    	while (line != null) {
+	    		switch(counter) {
+	        	case 0:	
+	        		if (!line.equals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")) {
+	        			setMessage("XML Error: Received unparseable message");
+	        			throw new KVException(this);
+	        		}
+	        	case 1: 
+	        		int begin = line.indexOf("<KVMessage>") + "<KVMessage type=".length();
+	        		int end = line.indexOf("\">");
+	        		if (begin != 0 || end < 0) {
+	        			setMessage("Message format incorrect");
+	        			throw new KVException(this);
+	        		}
+	        		msgType = line.substring(begin, end);
+	        		if (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq") {
+	        	    	this.msgType = "resp";
+	        	    	setMessage("Message format incorrect");
+	        	    	throw new KVException(this);
+	        	    }
+	        	case 2: 
+	        		if (msgType.equals("resp") && key == null) {
+	        			begin = line.indexOf("<Message>") + "<Message>".length();
+		        		end = line.indexOf("</Message>");
+		        		if (begin < 0 || end < 0) {
+		        			setMessage("Message format incorrect");
+			        		throw new KVException(this);
+		        		}
+		        		message = line.substring(begin, end);
+		        	} else if (line.indexOf("<Key>") == 0 && line.contains("</Key>")) {
+		        		begin = line.indexOf("<Key>") + "<Key>".length();
+		        		end = line.indexOf("</Key>");
+		        		key = line.substring(begin, end);
+		        	} else {
+		        		setMessage("Message format incorrect");
+		        		throw new KVException(this);
+		        	}
+	        	case 3:
+	        		if ((msgType.equals("getreq") || msgType.equals("delreq") || (msgType.equals("resp") && key == null)) && line.equals("</KVMessage>")) {
+	        		} else if (key != null) { // 
+	        			begin = line.indexOf("<Value>") + "<Value>".length();
+	            		end = line.indexOf("</Value>");
+	            		if (begin < 0 || end < 0) {
+	            			setMessage("Message format incorrect");
+			        		throw new KVException(this);
+	            		}
+	            		value = line.substring(begin, end);
+	        		}
+	        	case 4:
+	        		if ((msgType.equals("putreq") || (msgType.equals("resp") && key != null && value != null) && line.equals("</KVMessage>"))) {
+	        		} else {
+	        			setMessage("Message format incorrect");
+		        		throw new KVException(this);
+	        		}
+	        	case 5:
+	        		setMessage("Message format incorrect");
+	        		throw new KVException(this);
+	        	}
+	    		counter += 1;
+	    		line = br.readLine();
+	    	}
+	    	br.close();
+    	} catch (IOException e) {
+    		setMessage("Network Error: Could not receive data");
+			throw new KVException(this);
+    	}
+    	
 	}
 	
 	/**
@@ -175,11 +238,12 @@ public class KVMessage {
 	public void sendMessage(Socket sock) throws KVException {
 	    String sendString = toXML();
 	    byte[] send = new byte[256];
-	    for (int i = 0; i < 256; i++)
+	    for (int i = 0; i < sendString.length(); i++)
 	    	send[i] = (byte) sendString.charAt(i);
 	    try {
 	    	OutputStream out = sock.getOutputStream();
 	    	out.write(send);
+	    	out.flush();
 	    	out.close();
 	    	sock.close();
 	    } catch (IOException e) {
