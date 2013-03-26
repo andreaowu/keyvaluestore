@@ -37,7 +37,7 @@ public class ThreadPool {
 	 * Set of threads in the threadpool
 	 */
 	protected Thread threads[] = null;
-	protected PriorityQueue<Runnable> pq;
+	protected PriorityQueue<Runnable> pq = new PriorityQueue<Runnable>();
 
 	/**
 	 * Initialize the number of threads required in the threadpool. 
@@ -51,9 +51,8 @@ public class ThreadPool {
 	    	threads[i] = new WorkerThread(this);
 	    	threads[i].start();
 	    }
-	    pq = new PriorityQueue<Runnable>();
 	}
-
+	
 	/**
 	 * Add a job to the queue of tasks that has to be executed. As soon as a thread is available, 
 	 * it will retrieve tasks from this queue and start processing.
@@ -61,8 +60,9 @@ public class ThreadPool {
 	 * @throws InterruptedException 
 	 */
 	public void addToQueue(Runnable r) throws InterruptedException {
-		pq.add(r);
-		pq.notifyAll();
+		synchronized(pq) {
+			pq.add(r);
+		}
 	}
 	
 	/** 
@@ -72,7 +72,6 @@ public class ThreadPool {
 	 */
 	public synchronized Runnable getJob() throws InterruptedException {
 		while (pq.isEmpty()) {
-			pq.wait();
 		}
 		return pq.poll();
 	}

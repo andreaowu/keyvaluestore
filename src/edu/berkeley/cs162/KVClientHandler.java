@@ -80,10 +80,7 @@ public class KVClientHandler implements NetworkHandler {
 			} catch (KVException e) {
 				
 			}
-
 		}
-
-
 	}
 
 	/*

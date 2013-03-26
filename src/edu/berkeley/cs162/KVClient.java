@@ -31,9 +31,11 @@
  */
 package edu.berkeley.cs162;
 
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.net.InetAddress;
 
 /**
  * This class is used to communicate with (appropriately marshalling and
@@ -63,7 +65,7 @@ public class KVClient implements KeyValueInterface {
 
 	private Socket connectHost() throws KVException {
 		try {
-			connection = new Socket(server, port);
+			connection = new Socket(InetAddress.getByName(server), port);
 			return connection;
 		} catch (UnknownHostException e) {
 			KVMessage kmsg = new KVMessage("Network Error: Could not connect");

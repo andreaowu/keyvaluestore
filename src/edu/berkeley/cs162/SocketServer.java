@@ -55,8 +55,13 @@ public class SocketServer {
 	}
 
 	public void connect() throws IOException {
-		server = new ServerSocket(port);
-		connection = server.accept();
+		try {
+			server = new ServerSocket(port);
+			connection = server.accept();
+			return;
+		} catch (IOException e) {
+			System.out.println("IOException for making new ServerSocket");
+		}
 	}
 
 	/**
@@ -67,7 +72,6 @@ public class SocketServer {
 	 *             inadvertently closed)
 	 */
 	public void run() throws IOException {
-		connect();
 		try {
 			KVMessage received = new KVMessage(connection.getInputStream());
 			received.sendMessage(connection);
