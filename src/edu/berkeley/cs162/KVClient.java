@@ -31,7 +31,6 @@
  */
 package edu.berkeley.cs162;
 
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -100,7 +99,8 @@ public class KVClient implements KeyValueInterface {
 				}
 			}
 		} catch (IOException e) {
-			// TODO: not sure what to do here
+			KVMessage kmsg = new KVMessage("Network Error: Could not receive data");
+			throw new KVException(kmsg);
 		}
 		closeHost(sock);
 		return false;

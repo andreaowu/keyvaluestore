@@ -191,7 +191,7 @@ public class KVCache implements KeyValueInterface {
 
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
-		locks.put(getSetId(key), true); // TODO: notify, or let server notify?
+		locks.put(getSetId(key), true);
 		locks.get(getSetId(key)).notify();
 	}
 
@@ -241,8 +241,7 @@ public class KVCache implements KeyValueInterface {
 			while (j != maxElemsPerSet) {
 				finalString.concat(header + i + setIDend + ref
 						+ keyVal.get(j)[2] + valid + "false" + validEnd + 0
-						+ keyEnd + 0 + closing); // TODO: if not valid, what's
-													// the key/value?
+						+ keyEnd + 0 + closing); // TODO: if not valid, what's the key/value?
 				j++;
 			}
 

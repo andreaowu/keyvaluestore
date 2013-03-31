@@ -76,9 +76,9 @@ public class KVClientHandler implements NetworkHandler {
 					kvServer.del(msg.getKey());
 				msg.sendMessage(client);
 			} catch (IOException e) {
-				
+				System.out.println("IOException in running KVClientHandler");
 			} catch (KVException e) {
-				
+				System.out.println("KVException in running KVClientHandler");
 			}
 		}
 	}

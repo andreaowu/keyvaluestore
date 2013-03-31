@@ -58,7 +58,6 @@ public class SocketServer {
 		try {
 			server = new ServerSocket(port);
 			connection = server.accept();
-			return;
 		} catch (IOException e) {
 			System.out.println("IOException for making new ServerSocket");
 		}

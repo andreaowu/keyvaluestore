@@ -33,7 +33,6 @@ package edu.berkeley.cs162;
 import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.InputStream;
-import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.IOException;
@@ -131,7 +130,6 @@ public class KVMessage {
 	public KVMessage(InputStream input) throws KVException {
     	//read stream with BufferedReader
     	BufferedReader br = new BufferedReader(new InputStreamReader(input));
-    	StringBuilder sb = new StringBuilder();
     	int counter = 0;
     	try {
 	    	String line = br.readLine();
@@ -140,6 +138,7 @@ public class KVMessage {
 	        	case 0:	
 	        		if (!line.equals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")) {
 	        			setMessage("XML Error: Received unparseable message");
+	        			this.msgType = "resp";
 	        			throw new KVException(this);
 	        		}
 	        	case 1: 
@@ -147,6 +146,7 @@ public class KVMessage {
 	        		int end = line.indexOf("\">");
 	        		if (begin != 0 || end < 0) {
 	        			setMessage("Message format incorrect");
+	        			this.msgType = "resp";
 	        			throw new KVException(this);
 	        		}
 	        		msgType = line.substring(begin, end);
@@ -161,6 +161,7 @@ public class KVMessage {
 		        		end = line.indexOf("</Message>");
 		        		if (begin < 0 || end < 0) {
 		        			setMessage("Message format incorrect");
+		        			this.msgType = "resp";
 			        		throw new KVException(this);
 		        		}
 		        		message = line.substring(begin, end);
@@ -170,6 +171,7 @@ public class KVMessage {
 		        		key = line.substring(begin, end);
 		        	} else {
 		        		setMessage("Message format incorrect");
+		        		this.msgType = "resp";
 		        		throw new KVException(this);
 		        	}
 	        	case 3:
@@ -179,6 +181,7 @@ public class KVMessage {
 	            		end = line.indexOf("</Value>");
 	            		if (begin < 0 || end < 0) {
 	            			setMessage("Message format incorrect");
+	            			this.msgType = "resp";
 			        		throw new KVException(this);
 	            		}
 	            		value = line.substring(begin, end);
@@ -187,10 +190,12 @@ public class KVMessage {
 	        		if ((msgType.equals("putreq") || (msgType.equals("resp") && key != null && value != null) && line.equals("</KVMessage>"))) {
 	        		} else {
 	        			setMessage("Message format incorrect");
+	        			this.msgType = "resp";
 		        		throw new KVException(this);
 	        		}
 	        	case 5:
 	        		setMessage("Message format incorrect");
+	        		this.msgType = "resp";
 	        		throw new KVException(this);
 	        	}
 	    		counter += 1;
@@ -230,13 +235,18 @@ public class KVMessage {
 			return answer.concat(msgType + keyBegin + key + keyClose + valueBegin + value + valueEnd + kvMsg);
 		} else if (msgType == "resp" && message == "Success") {
 			return answer.concat(msgType + "\">\n" + messageBegin + "Success" + messageEnd + kvMsg);
-		} else {
+		} else if (msgType == "resp") {
 			return answer.concat(msgType + "\">\n" + messageBegin + "Error Message" + messageEnd + kvMsg);
+		} else {
+			setMessage("Message format incorrect");
+    		this.msgType = "resp";
+    		throw new KVException(this);
 		}
 	}
 	
 	public void sendMessage(Socket sock) throws KVException {
 	    String sendString = toXML();
+	    System.out.println("sendMessage: /n" + sendString);
 	    byte[] send = new byte[256];
 	    for (int i = 0; i < sendString.length(); i++)
 	    	send[i] = (byte) sendString.charAt(i);
