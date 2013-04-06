@@ -30,7 +30,10 @@
  */
 package edu.berkeley.cs162;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -57,8 +60,9 @@ public class SocketServer {
 	public void connect() throws IOException {
 		try {
 			server = new ServerSocket(port);
-			connection = server.accept();
+			System.out.println("Opened socket in SocketServer for port: " + port);
 		} catch (IOException e) {
+			e.printStackTrace();
 			System.out.println("IOException for making new ServerSocket");
 		}
 	}
@@ -71,14 +75,23 @@ public class SocketServer {
 	 *             inadvertently closed)
 	 */
 	public void run() throws IOException {
+		KVMessage received = null;
+		handler.handle(connection);
+		connection = server.accept();
 		try {
-			KVMessage received = new KVMessage(connection.getInputStream());
+			received = new KVMessage(connection.getInputStream());
 			received.sendMessage(connection);
 		} catch (KVException e) {
-
+			e.printStackTrace();
+			System.out.println("SocketServer run() problem");
 		}
-		stop();
-		closeSocket();
+//		System.out.println(received.getMessage());
+//		if (received != null) {
+//			//stop();
+//			//closeSocket();
+//			//System.out.println("Closed the socket in SocketServer");
+//			System.out.println("SocketServer string received is not null");
+//		}
 	}
 
 	/**

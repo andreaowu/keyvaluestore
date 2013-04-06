@@ -55,5 +55,4 @@ public class Server {
 		System.out.println("Starting Server");
 		server.run();
 	}
-
 }

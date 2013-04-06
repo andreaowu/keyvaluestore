@@ -101,22 +101,25 @@ public class KVMessage {
 	 * @throws KVException of type "resp" with message "Message format incorrect" if msgType is unknown
 	 */
 	public KVMessage(String msgType) throws KVException {
-	    if (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq") {
+		System.out.println("sup" + msgType);
+		if (msgType.equals("resp") || msgType.equals("delreq") || msgType.equals("putreq") || msgType.equals("getreq")) {
+			this.msgType = msgType;
+	    } else {
 	    	this.msgType = "resp";
 	    	setMessage("Message format incorrect");
 	    	throw new KVException(this);
 	    }
-	    this.msgType = msgType;
 	}
 	
 	public KVMessage(String msgType, String message) throws KVException { //TODO: can the message be null or 0 length?
-        if (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq") {
-	    	this.msgType = "resp";
-	    	setMessage("Message format incorrect");
-	    	throw new KVException(this);
+		if (msgType.equals("resp") || msgType.equals("delreq") || msgType.equals("putreq") || msgType.equals("getreq")) {
+        	this.msgType = msgType;
+        	setMessage(message);
+        } else {
+        	this.msgType = "resp";
+        	setMessage("Message format incorrect");
+        	throw new KVException(this);
         }
-        this.msgType = msgType;
-        setMessage(message);
 	}
 	
 	 /***
@@ -133,7 +136,9 @@ public class KVMessage {
     	int counter = 0;
     	try {
 	    	String line = br.readLine();
-	    	while (line != null) {
+	    	int begin;
+	    	int end;
+	    	for (; line != null; counter++, line = br.readLine()) {
 	    		switch(counter) {
 	        	case 0:	
 	        		if (!line.equals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")) {
@@ -141,23 +146,25 @@ public class KVMessage {
 	        			this.msgType = "resp";
 	        			throw new KVException(this);
 	        		}
-	        	case 1: 
-	        		int begin = line.indexOf("<KVMessage>") + "<KVMessage type=".length();
-	        		int end = line.indexOf("\">");
+	        		break;
+	        	case 1:
+	        		begin = line.indexOf("<KVMessage type=");
+	        		end = line.indexOf("\">");
 	        		if (begin != 0 || end < 0) {
 	        			setMessage("Message format incorrect");
 	        			this.msgType = "resp";
 	        			throw new KVException(this);
 	        		}
-	        		msgType = line.substring(begin, end);
-	        		if (msgType != "resp" && msgType != "delreq" && msgType != "putreq" && msgType != "getreq") {
+	        		msgType = line.substring(begin + "<KVMessage type=".length() + 1, end);
+	        		if (!msgType.equals("resp") && !msgType.equals("delreq") && !msgType.equals("putreq") && !msgType.equals("getreq")) {
 	        	    	this.msgType = "resp";
 	        	    	setMessage("Message format incorrect");
 	        	    	throw new KVException(this);
 	        	    }
+	        		break;
 	        	case 2: 
 	        		if (msgType.equals("resp") && key == null) {
-	        			begin = line.indexOf("<Message>") + "<Message>".length();
+	        			begin = line.indexOf("<Message>");
 		        		end = line.indexOf("</Message>");
 		        		if (begin < 0 || end < 0) {
 		        			setMessage("Message format incorrect");
@@ -174,18 +181,20 @@ public class KVMessage {
 		        		this.msgType = "resp";
 		        		throw new KVException(this);
 		        	}
+	        		break;
 	        	case 3:
 	        		if ((msgType.equals("getreq") || msgType.equals("delreq") || (msgType.equals("resp") && key == null)) && line.equals("</KVMessage>")) {
 	        		} else if (key != null) { // 
-	        			begin = line.indexOf("<Value>") + "<Value>".length();
+	        			begin = line.indexOf("<Value>");
 	            		end = line.indexOf("</Value>");
 	            		if (begin < 0 || end < 0) {
 	            			setMessage("Message format incorrect");
 	            			this.msgType = "resp";
 			        		throw new KVException(this);
 	            		}
-	            		value = line.substring(begin, end);
+	            		value = line.substring(begin + "<Value>".length(), end);
 	        		}
+	        		break;
 	        	case 4:
 	        		if ((msgType.equals("putreq") || (msgType.equals("resp") && key != null && value != null) && line.equals("</KVMessage>"))) {
 	        		} else {
@@ -193,13 +202,12 @@ public class KVMessage {
 	        			this.msgType = "resp";
 		        		throw new KVException(this);
 	        		}
+	        		break;
 	        	case 5:
 	        		setMessage("Message format incorrect");
 	        		this.msgType = "resp";
 	        		throw new KVException(this);
 	        	}
-	    		counter += 1;
-	    		line = br.readLine();
 	    	}
 	    	br.close();
     	} catch (IOException e) {
@@ -216,11 +224,10 @@ public class KVMessage {
 	 * 
 	 */
 	public String toXML() throws KVException {
-		if ( (msgType == "putreq" && (key == null || key.length() == 0 || value == null || value.length() == 0))
-				|| (msgType == "resp" && ((key == null || key.length() == 0 || value == null || value.length() == 0)
+		if ( (msgType.equals("putreq") && (key == null || key.length() == 0 || value == null || value.length() == 0))
+				|| (msgType.equals("resp") && ((key == null || key.length() == 0 || value == null || value.length() == 0)
 						&& (message == null) )))
 			throw new KVException(this);
-		
 		String answer = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<KVMessage type=\"";
 		String keyBegin = "\">\n<Key>";
 		String keyClose = "</Key>\n";
@@ -229,13 +236,13 @@ public class KVMessage {
 		String messageBegin = "<Message>";
 		String messageEnd = "</Message>";
 		String kvMsg = "</KVMessage>";
-		if (msgType == "getreq" || msgType == "delreq") {
+		if (msgType.equals("getreq") || msgType.equals("delreq")) {
 			return answer.concat(msgType + keyBegin + key + keyClose + kvMsg);
-		} else if (msgType == "putreq" || (msgType == "resp" && key != null && value != null)) {
+		} else if (msgType.equals("putreq") || (msgType.equals("resp") && key != null && value != null)) {
 			return answer.concat(msgType + keyBegin + key + keyClose + valueBegin + value + valueEnd + kvMsg);
-		} else if (msgType == "resp" && message == "Success") {
+		} else if (msgType.equals("resp") && message.equals("Success")) {
 			return answer.concat(msgType + "\">\n" + messageBegin + "Success" + messageEnd + kvMsg);
-		} else if (msgType == "resp") {
+		} else if (msgType.equals("resp")) {
 			return answer.concat(msgType + "\">\n" + messageBegin + "Error Message" + messageEnd + kvMsg);
 		} else {
 			setMessage("Message format incorrect");
@@ -246,7 +253,7 @@ public class KVMessage {
 	
 	public void sendMessage(Socket sock) throws KVException {
 	    String sendString = toXML();
-	    System.out.println("sendMessage: /n" + sendString);
+	    System.out.println("sendMessage: \n" + sendString);
 	    byte[] send = new byte[256];
 	    for (int i = 0; i < sendString.length(); i++)
 	    	send[i] = (byte) sendString.charAt(i);
@@ -254,11 +261,12 @@ public class KVMessage {
 	    	OutputStream out = sock.getOutputStream();
 	    	out.write(send);
 	    	out.flush();
-	    	out.close();
-	    	sock.close();
+	    	//out.close();
+	    	//sock.shutdownOutput();
 	    } catch (IOException e) {
-	    	KVMessage kmsg = new KVMessage("Network Error: Could not send data");
-			throw new KVException(kmsg);
+	    	setMessage("Network Error: Could not send data");
+	    	e.printStackTrace();
+			throw new KVException(this);
 	    }
 	}
 }

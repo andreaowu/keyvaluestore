@@ -32,7 +32,9 @@
 package edu.berkeley.cs162;
 
 import java.net.Socket;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 import java.net.InetAddress;
 
@@ -65,6 +67,7 @@ public class KVClient implements KeyValueInterface {
 	private Socket connectHost() throws KVException {
 		try {
 			connection = new Socket(InetAddress.getByName(server), port);
+			System.out.println("Socket connected in KVCLient, port: " + port);
 			return connection;
 		} catch (UnknownHostException e) {
 			KVMessage kmsg = new KVMessage("Network Error: Could not connect");
@@ -77,6 +80,8 @@ public class KVClient implements KeyValueInterface {
 
 	private void closeHost(Socket sock) throws KVException {
 		try {
+			sock.shutdownInput();
+			sock.shutdownOutput();
 			sock.close();
 		} catch (IOException e) {
 			KVMessage kmsg = new KVMessage("Unknown Error: Could not closeHost");
@@ -91,14 +96,13 @@ public class KVClient implements KeyValueInterface {
 		msg.setValue(value);
 		msg.sendMessage(sock);
 		try {
-			KVMessage msgReturned = new KVMessage(sock.getInputStream());
-			if (msgReturned.getMessage() != "Error Message") {
-				if (msgReturned.getStatus() == "true") {
-					closeHost(sock);
-					return true;
-				}
-			}
+			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+//			String read = in.readLine();
+//			System.out.println(read);
+			//System.out.println("BR read: " + in.readLine());
+			//sock.getInputStream();
 		} catch (IOException e) {
+			e.printStackTrace();
 			KVMessage kmsg = new KVMessage("Network Error: Could not receive data");
 			throw new KVException(kmsg);
 		}

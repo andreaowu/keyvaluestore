@@ -37,11 +37,11 @@ import edu.berkeley.cs162.KVClient;
 public class Client {
 	/**
 	 * @param args
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
 		KVClient kc = new KVClient("localhost", 8080);
-		try{
+		try {
 			String three = "3";
 			String seven = "7";
 			System.out.println("putting (3, 7)");
@@ -51,12 +51,12 @@ public class Client {
 			System.out.println("putting (3, 7) (again)");
 			status = kc.put(three, seven);
 			System.out.println("status: " + status);
-			
-			System.out.println("getting key=3");			
-			String value = kc.get(three);					
+
+			System.out.println("getting key=3");
+			String value = kc.get(three);
 			System.out.println("returned: " + value);
 			kc.del(three);
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

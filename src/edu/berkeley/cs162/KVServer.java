@@ -59,7 +59,7 @@ public class KVServer implements KeyValueInterface {
 	public boolean put(String key, String value) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerPutStarted(key, value);
-
+		System.out.println("put in KVServer");
 		if (key.length() > MAX_KEY_SIZE) {
 			KVMessage kmsg = new KVMessage("Oversized key");
 			// Must be called before returning

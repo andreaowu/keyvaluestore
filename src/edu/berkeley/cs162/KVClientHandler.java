@@ -30,7 +30,9 @@
  */
 package edu.berkeley.cs162;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 /**
@@ -67,10 +69,23 @@ public class KVClientHandler implements NetworkHandler {
 		@Override
 		public void run() {
 			try {
+				handle(client);
+				threadpool.getJob();
+				try {
+					BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+					String read = in.readLine();
+					//System.out.println(read);
+					//System.out.println("BR read: " + in.readLine());
+					//sock.getInputStream();
+				} catch (IOException e) {
+					e.printStackTrace();
+					KVMessage kmsg = new KVMessage("Network Error: Could not receive data");
+					throw new KVException(kmsg);
+				}
 				KVMessage msg = new KVMessage(client.getInputStream());
-				if (msg.getMsgType() == "getreq")
+				if (msg.getMsgType().equals("getreq"))
 					kvServer.get(msg.getKey());
-				else if (msg.getMsgType() == "putreq")
+				else if (msg.getMsgType().equals("putreq"))
 					msg.setStatus("" + kvServer.put(msg.getKey(), msg.getValue()));
 				else
 					kvServer.del(msg.getKey());
@@ -79,6 +94,8 @@ public class KVClientHandler implements NetworkHandler {
 				System.out.println("IOException in running KVClientHandler");
 			} catch (KVException e) {
 				System.out.println("KVException in running KVClientHandler");
+			} catch (InterruptedException e) {
+				System.out.println("InterruptedException in running KVClientHandler");
 			}
 		}
 	}
