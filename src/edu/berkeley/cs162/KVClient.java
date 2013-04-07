@@ -96,19 +96,17 @@ public class KVClient implements KeyValueInterface {
 		try {
 			KVMessage msgReturned = new KVMessage(sock.getInputStream());
 			System.out.println("KVClient received message");
-			if (msgReturned.getMessage() != "Error Message") {
-				if (msgReturned.getStatus() == "true") {
-					//closeHost(sock);
-					return true;
-				}
+			if (msgReturned.getStatus().equals("true")) {
+				closeHost(sock);
+				return true;
 			}
+			closeHost(sock);
+			return false;
 		} catch (IOException e) {
 			e.printStackTrace();
 			KVMessage kmsg = new KVMessage("Network Error: Could not receive data");
 			throw new KVException(kmsg);
 		}
-		closeHost(sock);
-		return false;
 	}
 
 	public String get(String key) throws KVException {
@@ -125,7 +123,7 @@ public class KVClient implements KeyValueInterface {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//closeHost(sock);
+		closeHost(sock);
 		return null;
 	}
 
@@ -141,6 +139,6 @@ public class KVClient implements KeyValueInterface {
 		} catch (IOException e) {
 
 		}
-		//closeHost(sock);
+		closeHost(sock);
 	}
 }

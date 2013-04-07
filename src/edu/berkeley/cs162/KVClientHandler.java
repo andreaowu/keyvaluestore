@@ -69,23 +69,22 @@ public class KVClientHandler implements NetworkHandler {
 		@Override
 		public void run() {
 			try {
-					KVMessage msg = new KVMessage(client.getInputStream());
-					KVMessage response = new KVMessage("resp");
-					if (msg.getMsgType().equals("getreq")) {
-						response.setValue(kvServer.get(msg.getKey()));
-						response.setKey(msg.getKey());
-						response.setMessage("Success");
-					}
-					else if (msg.getMsgType().equals("putreq")) {
-						kvServer.put(msg.getKey(), msg.getValue()); //TODO: I don't think need to do this
-						response.setMessage("Success");
-					} else {
-						kvServer.del(msg.getKey());
-						response.setMessage("Success");
-					}
-					System.out.println("KVClientHandler calling sendMessage");
-					response.sendMessage(client);
-				//}
+				KVMessage msg = new KVMessage(client.getInputStream());
+				KVMessage response = new KVMessage("resp");
+				if (msg.getMsgType().equals("getreq")) {
+					response.setValue(kvServer.get(msg.getKey()));
+					response.setKey(msg.getKey());
+					response.setMessage("Success");
+				}
+				else if (msg.getMsgType().equals("putreq")) {
+					response.setStatus("" + kvServer.put(msg.getKey(), msg.getValue()));
+					response.setMessage("Success");
+				} else {
+					kvServer.del(msg.getKey());
+					response.setMessage("Success");
+				}
+				System.out.println("KVClientHandler calling sendMessage");
+				response.sendMessage(client);
 			} catch (IOException e) {
 				System.out.println("IOException in running KVClientHandler");
 			} catch (KVException e) {
