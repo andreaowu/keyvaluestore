@@ -29,7 +29,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.berkeley.cs162;
-import java.util.PriorityQueue;
+import java.util.LinkedList;
 
 public class ThreadPool {
 	
@@ -37,7 +37,7 @@ public class ThreadPool {
 	 * Set of threads in the threadpool
 	 */
 	protected Thread threads[] = null;
-	protected PriorityQueue<Runnable> pq = new PriorityQueue<Runnable>();
+	protected LinkedList<Runnable> pq = new LinkedList<Runnable>();
 
 	/**
 	 * Initialize the number of threads required in the threadpool. 
@@ -47,6 +47,7 @@ public class ThreadPool {
 	public ThreadPool(int size)
 	{      
 	    threads = new Thread[size];
+	    pq = new LinkedList<Runnable>();
 	    for (int i = 0; i < size; i++) {
 	    	threads[i] = new WorkerThread(this);
 	    	threads[i].start();
@@ -89,9 +90,8 @@ class WorkerThread extends Thread {
 	
 	protected ThreadPool tp;
 	
-	WorkerThread(ThreadPool o)
-	{
-	     tp = o;
+	WorkerThread(ThreadPool o) {
+		tp = o;
 	}
 
 	/**

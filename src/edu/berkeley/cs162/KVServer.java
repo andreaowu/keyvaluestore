@@ -73,11 +73,7 @@ public class KVServer implements KeyValueInterface {
 		}
 
 		boolean cache = dataCache.put(key, value);
-		if (!cache) {
-			// Must be called before returning
-			AutoGrader.agKVServerPutFinished(key, value);
-			return false;
-		}
+
 		boolean store;
 		try {
 			store = dataStore.put(key, value);
@@ -86,6 +82,12 @@ public class KVServer implements KeyValueInterface {
 			// Must be called before returning
 			AutoGrader.agKVServerGetFinished(key);
 			throw new KVException(kmsg);
+		}		
+		
+		if (!cache) {
+			// Must be called before returning
+			AutoGrader.agKVServerPutFinished(key, value);
+			return false;
 		}
 		// Must be called before returning
 		AutoGrader.agKVServerPutFinished(key, value);

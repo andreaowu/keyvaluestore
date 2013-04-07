@@ -75,16 +75,17 @@ public class SocketServer {
 	 *             inadvertently closed)
 	 */
 	public void run() throws IOException {
-		KVMessage received = null;
-		handler.handle(connection);
-		connection = server.accept();
-		try {
-			received = new KVMessage(connection.getInputStream());
-			received.sendMessage(connection);
-		} catch (KVException e) {
-			e.printStackTrace();
-			System.out.println("SocketServer run() problem");
+		while (true) {
+			if (server.isClosed())
+				connect();
+			connection = server.accept();
+			System.out.println("SocketServer true");
+			handler.handle(connection);
+			closeSocket();
+			stop();
 		}
+	}
+		
 //		System.out.println(received.getMessage());
 //		if (received != null) {
 //			//stop();
@@ -92,7 +93,7 @@ public class SocketServer {
 //			//System.out.println("Closed the socket in SocketServer");
 //			System.out.println("SocketServer string received is not null");
 //		}
-	}
+//	}
 
 	/**
 	 * Add the network handler for the current socket server
@@ -108,14 +109,18 @@ public class SocketServer {
 	 * Stop the ServerSocket
 	 */
 	public void stop() {
-		// TODO: implement me
-	}
-
-	private void closeSocket() {
 		try {
 			server.close();
 		} catch (IOException e) {
 			// TODO: what to do here?
+		}
+	}
+
+	private void closeSocket() {
+		try {
+			connection.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

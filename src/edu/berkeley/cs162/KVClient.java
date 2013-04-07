@@ -32,9 +32,7 @@
 package edu.berkeley.cs162;
 
 import java.net.Socket;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 import java.net.InetAddress;
 
@@ -80,8 +78,8 @@ public class KVClient implements KeyValueInterface {
 
 	private void closeHost(Socket sock) throws KVException {
 		try {
+			System.out.println("KVClient socket closed");
 			sock.shutdownInput();
-			sock.shutdownOutput();
 			sock.close();
 		} catch (IOException e) {
 			KVMessage kmsg = new KVMessage("Unknown Error: Could not closeHost");
@@ -96,11 +94,14 @@ public class KVClient implements KeyValueInterface {
 		msg.setValue(value);
 		msg.sendMessage(sock);
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-//			String read = in.readLine();
-//			System.out.println(read);
-			//System.out.println("BR read: " + in.readLine());
-			//sock.getInputStream();
+			KVMessage msgReturned = new KVMessage(sock.getInputStream());
+			System.out.println("KVClient received message");
+			if (msgReturned.getMessage() != "Error Message") {
+				if (msgReturned.getStatus() == "true") {
+					//closeHost(sock);
+					return true;
+				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			KVMessage kmsg = new KVMessage("Network Error: Could not receive data");
@@ -122,9 +123,9 @@ public class KVClient implements KeyValueInterface {
 				return msgReturned.getValue();
 			}
 		} catch (IOException e) {
-
+			e.printStackTrace();
 		}
-		closeHost(sock);
+		//closeHost(sock);
 		return null;
 	}
 
@@ -140,6 +141,6 @@ public class KVClient implements KeyValueInterface {
 		} catch (IOException e) {
 
 		}
-		closeHost(sock);
+		//closeHost(sock);
 	}
 }

@@ -87,7 +87,7 @@ public class KVCache implements KeyValueInterface {
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
 				locks.put(getSetId(key), true);
-				locks.get(getSetId(key)).notify();
+				//locks.get(getSetId(key)).notify();
 				return keyVal.get(i)[1];
 			}
 		}
@@ -95,7 +95,7 @@ public class KVCache implements KeyValueInterface {
 		// Must be called before returning
 		AutoGrader.agCacheGetFinished(key);
 		locks.put(getSetId(key), true);
-		locks.get(getSetId(key)).notify();
+		//locks.get(getSetId(key)).notify();
 		return null;
 	}
 
@@ -130,7 +130,7 @@ public class KVCache implements KeyValueInterface {
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
 				locks.put(getSetId(key), true);
-				locks.get(getSetId(key)).notify();
+				//locks.get(getSetId(key)).notify();
 				return true;
 			}
 		}
@@ -147,7 +147,7 @@ public class KVCache implements KeyValueInterface {
 			// Must be called before returning
 			AutoGrader.agCacheGetFinished(key);
 			locks.put(getSetId(key), true);
-			locks.get(getSetId(key)).notify();
+//			locks.get(getSetId(key)).notify();
 			return false;
 		}
 
@@ -157,15 +157,15 @@ public class KVCache implements KeyValueInterface {
 			check[3] = "0";
 			keyVal.remove(0);
 			keyVal.add(check);
-			setToElem.put(getSetId(key), keyVal);
 			check = keyVal.get(0);
 		}
 		keyVal.remove(0);
 		keyVal.add(put);
+		setToElem.put(getSetId(key), keyVal);
 		// Must be called before returning
 		AutoGrader.agCachePutFinished(key, value);
 		locks.put(getSetId(key), true);
-		locks.get(getSetId(key)).notify();
+		//locks.get(getSetId(key)).notify();
 		return true;
 	}
 
@@ -192,7 +192,7 @@ public class KVCache implements KeyValueInterface {
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
 		locks.put(getSetId(key), true);
-		locks.get(getSetId(key)).notify();
+		//locks.get(getSetId(key)).notify();
 	}
 
 	/**

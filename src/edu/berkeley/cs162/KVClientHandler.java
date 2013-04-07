@@ -69,33 +69,29 @@ public class KVClientHandler implements NetworkHandler {
 		@Override
 		public void run() {
 			try {
-				handle(client);
-				threadpool.getJob();
-				try {
-					BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-					String read = in.readLine();
-					//System.out.println(read);
-					//System.out.println("BR read: " + in.readLine());
-					//sock.getInputStream();
-				} catch (IOException e) {
-					e.printStackTrace();
-					KVMessage kmsg = new KVMessage("Network Error: Could not receive data");
-					throw new KVException(kmsg);
-				}
-				KVMessage msg = new KVMessage(client.getInputStream());
-				if (msg.getMsgType().equals("getreq"))
-					kvServer.get(msg.getKey());
-				else if (msg.getMsgType().equals("putreq"))
-					msg.setStatus("" + kvServer.put(msg.getKey(), msg.getValue()));
-				else
-					kvServer.del(msg.getKey());
-				msg.sendMessage(client);
+					KVMessage msg = new KVMessage(client.getInputStream());
+					KVMessage response = new KVMessage("resp");
+					if (msg.getMsgType().equals("getreq")) {
+						response.setValue(kvServer.get(msg.getKey()));
+						response.setKey(msg.getKey());
+						response.setMessage("Success");
+					}
+					else if (msg.getMsgType().equals("putreq")) {
+						kvServer.put(msg.getKey(), msg.getValue()); //TODO: I don't think need to do this
+						response.setMessage("Success");
+					} else {
+						kvServer.del(msg.getKey());
+						response.setMessage("Success");
+					}
+					System.out.println("KVClientHandler calling sendMessage");
+					response.sendMessage(client);
+				//}
 			} catch (IOException e) {
 				System.out.println("IOException in running KVClientHandler");
 			} catch (KVException e) {
 				System.out.println("KVException in running KVClientHandler");
-			} catch (InterruptedException e) {
-				System.out.println("InterruptedException in running KVClientHandler");
+//			} catch (InterruptedException e) {
+//				System.out.println("InterruptedException in running KVClientHandler");
 			}
 		}
 	}
@@ -110,6 +106,7 @@ public class KVClientHandler implements NetworkHandler {
 		Runnable r = new ClientHandler(kv_Server, client);
 		try {
 			threadpool.addToQueue(r);
+			r.run();
 		} catch (InterruptedException e) {
 			// Ignore this error
 			return;
