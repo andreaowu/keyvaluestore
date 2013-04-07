@@ -89,8 +89,6 @@ public class KVClientHandler implements NetworkHandler {
 				System.out.println("IOException in running KVClientHandler");
 			} catch (KVException e) {
 				System.out.println("KVException in running KVClientHandler");
-//			} catch (InterruptedException e) {
-//				System.out.println("InterruptedException in running KVClientHandler");
 			}
 		}
 	}

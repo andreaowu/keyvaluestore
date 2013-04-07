@@ -136,9 +136,7 @@ public class KVServer implements KeyValueInterface {
 		}
 
 		try {
-			get(key);
 			dataStore.del(key);
-			dataCache.getWriteLock(key);
 			dataCache.del(key);
 		} catch (KVException e) {
 			KVMessage kmsg = new KVMessage("Does not exist");

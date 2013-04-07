@@ -85,15 +85,6 @@ public class SocketServer {
 			stop();
 		}
 	}
-		
-//		System.out.println(received.getMessage());
-//		if (received != null) {
-//			//stop();
-//			//closeSocket();
-//			//System.out.println("Closed the socket in SocketServer");
-//			System.out.println("SocketServer string received is not null");
-//		}
-//	}
 
 	/**
 	 * Add the network handler for the current socket server

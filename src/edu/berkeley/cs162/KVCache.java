@@ -194,13 +194,15 @@ public class KVCache implements KeyValueInterface {
 	 * @return the write lock of the set that contains key.
 	 */
 	public WriteLock getWriteLock(String key) {
-		while (!locks.get(getSetId(key))) {
-			try {
-				locks.get(getSetId(key)).wait();
-			} catch (InterruptedException e) {
+		synchronized(locks) {
+			while (!locks.get(getSetId(key))) {
+				try {
+					locks.get(getSetId(key)).wait();
+				} catch (InterruptedException e) {
+				}
 			}
+			locks.put(getSetId(key), false);
 		}
-		locks.put(getSetId(key), false);
 		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 		return lock.writeLock();
 	}

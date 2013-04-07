@@ -34,6 +34,14 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.io.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import java.io.File;
+
 
 /**
  * This is a dummy KeyValue Store. Ideally this would go to disk, 
@@ -135,6 +143,19 @@ public class KVStore implements KeyValueInterface {
     }
 
     public void restoreFromFile(String fileName) throws KVException{
+    	File file = new File(fileName);
+    	DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    	try {
+    		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    		Document doc = dBuilder.parse(file);
+    		doc.getDocumentElement().normalize();
+    		
+    	} catch (Exception e) {
+    		KVMessage kmsg = new KVMessage("Unknown Error:could not open file to restore");
+			throw new KVException(kmsg);
+    	}
+    	
+    	
         FileInputStream fstream;
         try {
         	fstream = new FileInputStream(fileName);

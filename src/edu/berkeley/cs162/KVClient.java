@@ -82,7 +82,7 @@ public class KVClient implements KeyValueInterface {
 			sock.shutdownInput();
 			sock.close();
 		} catch (IOException e) {
-			KVMessage kmsg = new KVMessage("Unknown Error: Could not closeHost");
+			KVMessage kmsg = new KVMessage("Unknown Error: Could not close socket");
 			throw new KVException(kmsg);
 		}
 	}
@@ -96,7 +96,7 @@ public class KVClient implements KeyValueInterface {
 		try {
 			KVMessage msgReturned = new KVMessage(sock.getInputStream());
 			System.out.println("KVClient received message");
-			if (msgReturned.getStatus().equals("true")) {
+			if (msgReturned.getMessage() != "Error Message") {
 				closeHost(sock);
 				return true;
 			}
@@ -135,6 +135,7 @@ public class KVClient implements KeyValueInterface {
 		try {
 			KVMessage msgReturned = new KVMessage(sock.getInputStream());
 			if (msgReturned.getMessage() != "Error Message")
+				closeHost(sock);
 				return;
 		} catch (IOException e) {
 
