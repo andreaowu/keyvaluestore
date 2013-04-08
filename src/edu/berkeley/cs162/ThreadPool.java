@@ -100,8 +100,10 @@ class WorkerThread extends Thread {
 	public void run() {
 		Runnable task = null;
 		try {
-			while (true)
+			while (true) {
 				task = tp.getJob();
+//				task.run();
+			}
 		} catch (InterruptedException e) {
 			if (task != null) {
 				try {

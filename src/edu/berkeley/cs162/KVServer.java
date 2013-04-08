@@ -30,6 +30,8 @@
  */
 package edu.berkeley.cs162;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
 /**
  * This class defines the slave key value servers. Each individual KVServer
  * would be a fully functioning Key-Value server. For Project 3, you would
@@ -71,7 +73,8 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerPutFinished(key, value);
 			throw new KVException(kmsg);
 		}
-		dataCache.getWriteLock(key);
+		WriteLock lock = dataCache.getWriteLock(key);
+		lock.lock();
 		boolean cache = dataCache.put(key, value);
 
 		boolean store;
@@ -83,7 +86,7 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerGetFinished(key);
 			throw new KVException(kmsg);
 		}		
-		
+		lock.unlock();
 		if (!cache) {
 			// Must be called before returning
 			AutoGrader.agKVServerPutFinished(key, value);
@@ -104,13 +107,8 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerGetFinished(key);
 			throw new KVException(kmsg);
 		}
-		dataCache.getWriteLock(key);
-		String store = dataStore.get(key);
-		if (store != null) {
-			// Must be called before returning
-			AutoGrader.agKVServerGetFinished(key);
-			return store;
-		}
+		WriteLock lock = dataCache.getWriteLock(key);
+		lock.lock();
 		String cache = dataCache.get(key);
 		if (cache == null) {
 			KVMessage kmsg = new KVMessage("Does not exist");
@@ -118,10 +116,11 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerGetFinished(key);
 			throw new KVException(kmsg);
 		}
-
+		String store = dataStore.get(key);
+		lock.unlock();
 		// Must be called before returning
 		AutoGrader.agKVServerGetFinished(key);
-		return cache;
+		return store;
 	}
 
 	public void del(String key) throws KVException {
@@ -134,7 +133,8 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerDelFinished(key);
 			throw new KVException(kmsg);
 		}
-
+		WriteLock lock = dataCache.getWriteLock(key);
+		lock.lock();
 		try {
 			dataStore.del(key);
 			dataCache.del(key);
@@ -144,6 +144,7 @@ public class KVServer implements KeyValueInterface {
 			AutoGrader.agKVServerDelFinished(key);
 			throw new KVException(kmsg);
 		}
+		lock.unlock();
 		// Must be called before returning
 		AutoGrader.agKVServerDelFinished(key);
 	}

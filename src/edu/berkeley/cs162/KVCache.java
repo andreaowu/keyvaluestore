@@ -46,7 +46,7 @@ public class KVCache implements KeyValueInterface {
 	private int numSets = 100;
 	private int maxElemsPerSet = 10;
 	private HashMap<Integer, ArrayList<String[]>> setToElem;
-	private HashMap<Integer, Boolean> locks; // true for lock available
+	private HashMap<Integer, WriteLock> locks; // true for lock available
 
 	/**
 	 * Creates a new LRU cache.
@@ -58,10 +58,10 @@ public class KVCache implements KeyValueInterface {
 		this.numSets = numSets;
 		this.maxElemsPerSet = maxElemsPerSet;
 		setToElem = new HashMap<Integer, ArrayList<String[]>>();
-		locks = new HashMap<Integer, Boolean>();
+		locks = new HashMap<Integer, WriteLock>();
 		for (int i = 0; i < numSets; i++) {
 			setToElem.put(i, new ArrayList<String[]>()); // String[0]: key 	String[1]: value 	String[2]: use bit
-			locks.put(i, true);
+			locks.put(i, new ReentrantReadWriteLock().writeLock());
 		}
 	}
 
@@ -86,14 +86,12 @@ public class KVCache implements KeyValueInterface {
 
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
-				locks.put(getSetId(key), true);
 				return keyVal.get(i)[1];
 			}
 		}
 
 		// Must be called before returning
 		AutoGrader.agCacheGetFinished(key);
-		locks.put(getSetId(key), true);
 		return null;
 	}
 
@@ -127,7 +125,6 @@ public class KVCache implements KeyValueInterface {
 				setToElem.put(getSetId(key), keyVal);
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
-				locks.put(getSetId(key), true);
 				return true;
 			}
 		}
@@ -143,7 +140,6 @@ public class KVCache implements KeyValueInterface {
 			setToElem.put(getSetId(key), keyVal);
 			// Must be called before returning
 			AutoGrader.agCacheGetFinished(key);
-			locks.put(getSetId(key), true);
 			return false;
 		}
 
@@ -160,7 +156,6 @@ public class KVCache implements KeyValueInterface {
 		setToElem.put(getSetId(key), keyVal);
 		// Must be called before returning
 		AutoGrader.agCachePutFinished(key, value);
-		locks.put(getSetId(key), true);
 		return true;
 	}
 
@@ -186,7 +181,6 @@ public class KVCache implements KeyValueInterface {
 
 		// Must be called before returning
 		AutoGrader.agCacheDelFinished(key);
-		locks.put(getSetId(key), true);
 	}
 
 	/**
@@ -194,17 +188,7 @@ public class KVCache implements KeyValueInterface {
 	 * @return the write lock of the set that contains key.
 	 */
 	public WriteLock getWriteLock(String key) {
-		synchronized(locks) {
-			while (!locks.get(getSetId(key))) {
-				try {
-					locks.get(getSetId(key)).wait();
-				} catch (InterruptedException e) {
-				}
-			}
-			locks.put(getSetId(key), false);
-		}
-		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-		return lock.writeLock();
+		return locks.get(getSetId(key));
 	}
 
 	/**
