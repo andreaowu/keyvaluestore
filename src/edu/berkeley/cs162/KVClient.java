@@ -87,7 +87,7 @@ public class KVClient implements KeyValueInterface {
 		}
 	}
 
-	public boolean put(String key, String value) throws KVException {
+	public void put(String key, String value) throws KVException {
 		Socket sock = connectHost();
 		KVMessage msg = new KVMessage("putreq");
 		msg.setKey(key);
@@ -98,10 +98,8 @@ public class KVClient implements KeyValueInterface {
 			System.out.println("KVClient received message");
 			if (msgReturned.getMessage() != "Error Message") {
 				closeHost(sock);
-				return true;
 			}
 			closeHost(sock);
-			return false;
 		} catch (IOException e) {
 			e.printStackTrace();
 			KVMessage kmsg = new KVMessage("Network Error: Could not receive data");

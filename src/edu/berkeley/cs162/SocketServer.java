@@ -76,7 +76,6 @@ public class SocketServer {
 			if (server.isClosed())
 				connect();
 			connection = server.accept();
-			System.out.println("SocketServer true");
 			handler.handle(connection);
 			closeSocket();
 			stop();
@@ -100,7 +99,7 @@ public class SocketServer {
 		try {
 			server.close();
 		} catch (IOException e) {
-			// TODO: what to do here?
+
 		}
 	}
 

@@ -107,7 +107,7 @@ public class KVCache implements KeyValueInterface {
 	 *            a value to be associated with the specified key.
 	 * @return true is something has been overwritten
 	 */
-	public boolean put(String key, String value) {
+	public void put(String key, String value) {
 		// Must be called before anything else
 		AutoGrader.agCachePutStarted(key, value);
 		AutoGrader.agCachePutDelay();
@@ -125,7 +125,6 @@ public class KVCache implements KeyValueInterface {
 				setToElem.put(getSetId(key), keyVal);
 				// Must be called before returning
 				AutoGrader.agCacheGetFinished(key);
-				return true;
 			}
 		}
 
@@ -140,7 +139,6 @@ public class KVCache implements KeyValueInterface {
 			setToElem.put(getSetId(key), keyVal);
 			// Must be called before returning
 			AutoGrader.agCacheGetFinished(key);
-			return false;
 		}
 
 		String[] check = keyVal.get(0);
@@ -156,7 +154,6 @@ public class KVCache implements KeyValueInterface {
 		setToElem.put(getSetId(key), keyVal);
 		// Must be called before returning
 		AutoGrader.agCachePutFinished(key, value);
-		return true;
 	}
 
 	/**

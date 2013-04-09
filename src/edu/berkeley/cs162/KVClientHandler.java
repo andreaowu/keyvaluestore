@@ -75,7 +75,6 @@ public class KVClientHandler implements NetworkHandler {
 					response.setMessage("Success");
 				}
 				else if (msg.getMsgType().equals("putreq")) {
-					response.setStatus("" + kvServer.put(msg.getKey(), msg.getValue()));
 					response.setMessage("Success");
 				} else {
 					kvServer.del(msg.getKey());
