@@ -91,7 +91,7 @@ class WorkerThread extends Thread {
 	protected ThreadPool tp;
 	
 	WorkerThread(ThreadPool o) {
-		super();
+//		super();
 		tp = o;
 	}
 
@@ -103,7 +103,7 @@ class WorkerThread extends Thread {
 		try {
 			while (true) {
 				task = tp.getJob();
-				task.run();
+//				task.run();
 			}
 		} catch (InterruptedException e) {
 			if (task != null) {

@@ -60,12 +60,13 @@ public class KVStore implements KeyValueInterface {
 		store = new Hashtable<String, String>();
 	}
 	
-	public void put(String key, String value) throws KVException {
+	public boolean put(String key, String value) throws KVException {
 		AutoGrader.agStorePutStarted(key, value);
 		
 		try {
 			putDelay();
 			store.put(key, value);
+			return false;
 		} finally {
 			AutoGrader.agStorePutFinished(key, value);
 		}

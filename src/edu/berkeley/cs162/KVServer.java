@@ -58,7 +58,7 @@ public class KVServer implements KeyValueInterface {
 		AutoGrader.registerKVServer(dataStore, dataCache);
 	}
 
-	public void put(String key, String value) throws KVException {
+	public boolean put(String key, String value) throws KVException {
 		// Must be called before anything else
 		AutoGrader.agKVServerPutStarted(key, value);
 		System.out.println("put in KVServer");
@@ -75,10 +75,11 @@ public class KVServer implements KeyValueInterface {
 		}
 		WriteLock lock = dataCache.getWriteLock(key);
 		lock.lock();
-		dataCache.put(key, value);
+		boolean cache = dataCache.put(key, value);
 
+		boolean store;
 		try {
-			dataStore.put(key, value);
+			store = dataStore.put(key, value);
 		} catch (KVException e) {
 			KVMessage kmsg = new KVMessage("I/O Error");
 			// Must be called before returning
@@ -86,9 +87,14 @@ public class KVServer implements KeyValueInterface {
 			throw new KVException(kmsg);
 		}		
 		lock.unlock();
-
+		if (!cache) {
+			// Must be called before returning
+			AutoGrader.agKVServerPutFinished(key, value);
+			return false;
+		}
 		// Must be called before returning
 		AutoGrader.agKVServerPutFinished(key, value);
+		return store;
 	}
 
 	public String get(String key) throws KVException {
