@@ -34,13 +34,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
- * This is an generic class that should handle all TCP network connections
- * arriving on a given unique (host, port) tuple. Ensure that this class remains
- * generic by providing the connection handling logic in a NetworkHandler
- * 
- * A socket server either allows or rejects the requested connection based on
- * the destination or user identification.
+/** 
+ * This is an generic class that should handle all TCP network connections 
+ * arriving on a given unique (host, port) tuple. Ensure that this class 
+ * remains generic by providing the connection handling logic in a NetworkHandler
  */
 public class SocketServer {
 	String hostname;
@@ -48,45 +45,34 @@ public class SocketServer {
 	NetworkHandler handler;
 	ServerSocket server;
 	Socket connection;
-
+	
 	public SocketServer(String hostname, int port) {
 		this.hostname = hostname;
 		this.port = port;
 	}
-
+	
 	public void connect() throws IOException {
-		try {
-			server = new ServerSocket(port);
-			System.out.println("Opened socket in SocketServer for port: " + port);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.out.println("IOException for making new ServerSocket");
-		}
+	      server = new ServerSocket(port);
 	}
-
+	
 	/**
-	 * Accept requests and service them asynchronously.
-	 * 
-	 * @throws IOException
-	 *             if there is a network error (for instance if the socket is
-	 *             inadvertently closed)
+	 * Accept requests and service them asynchronously. 
+	 * @throws IOException if there is a network error (for instance if the socket is inadvertently closed) 
 	 */
 	public void run() throws IOException {
-		while (true) {
-			if (server.isClosed())
-				connect();
-			connection = server.accept();
-			handler.handle(connection);
-			closeSocket();
-			stop();
-		}
+	      while (true) {
+				if (server.isClosed())
+					connect();
+				connection = server.accept();
+				handler.handle(connection);
+				closeSocket();
+				stop();
+			}
 	}
-
-	/**
+	
+	/** 
 	 * Add the network handler for the current socket server
-	 * 
-	 * @param handler
-	 *            is logic for servicing a network connection
+	 * @param handler is logic for servicing a network connection
 	 */
 	public void addHandler(NetworkHandler handler) {
 		this.handler = handler;
@@ -96,22 +82,17 @@ public class SocketServer {
 	 * Stop the ServerSocket
 	 */
 	public void stop() {
+	      finalize();
+	}
+	
+	private void closeSocket() {
 		try {
 			server.close();
 		} catch (IOException e) {
-
 		}
 	}
-
-	private void closeSocket() {
-		try {
-			connection.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	protected void finalize() {
+	
+	protected void finalize(){
 		closeSocket();
 	}
 }

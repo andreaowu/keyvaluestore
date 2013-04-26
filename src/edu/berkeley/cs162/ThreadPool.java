@@ -29,52 +29,83 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.berkeley.cs162;
+
 import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ThreadPool {
-	
 	/**
 	 * Set of threads in the threadpool
 	 */
 	protected Thread threads[] = null;
-	protected LinkedList<Runnable> pq = new LinkedList<Runnable>();
+	protected Queue<Runnable> tasks = null;
+	protected static Lock taskLock;
+	protected static Condition hasTask;
 
 	/**
-	 * Initialize the number of threads required in the threadpool. 
+	 * Initialize the number of threads required in the threadpool.
 	 * 
-	 * @param size  How many threads in the thread pool.
+	 * @param size How many threads in the thread pool.
 	 */
-	public ThreadPool(int size)
-	{      
-	    threads = new Thread[size];
-	    pq = new LinkedList<Runnable>();
-	    for (int i = 0; i < size; i++) {
-	    	threads[i] = new WorkerThread(this);
-	    	threads[i].start();
-	    }
+	public ThreadPool(int size) {
+		this.threads = new Thread[size];
+		this.tasks = new LinkedList<Runnable>();
+		taskLock = new ReentrantLock();
+		hasTask = taskLock.newCondition();
+		for (int i = 0; i < size; i++) {
+			Thread nThread = new WorkerThread(this);
+			threads[i] = nThread;
+			threads[i].start();
+		}
+
 	}
-	
+
+	/*
+	 * public Thread[] getThreadGroup(){ return threads; }
+	 */
+
 	/**
-	 * Add a job to the queue of tasks that has to be executed. As soon as a thread is available, 
-	 * it will retrieve tasks from this queue and start processing.
+	 * Add a job to the queue of tasks that has to be executed. As soon as a
+	 * thread is available, it will retrieve tasks from this queue and start
+	 * processing.
+	 * 
 	 * @param r job that has to be executed asynchronously
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	public void addToQueue(Runnable r) throws InterruptedException {
-		synchronized(pq) {
-			pq.add(r);
+		taskLock.lock();
+		synchronized (this.tasks) {
+			this.tasks.add(r);
 		}
+		hasTask.signal();
+		taskLock.unlock();
+		// System.out.println("added");
 	}
-	
-	/** 
+
+	/**
 	 * Block until a job is available in the queue and retrieve the job
+	 * 
 	 * @return A runnable task that has to be executed
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	public synchronized Runnable getJob() throws InterruptedException {
-		while (pq.isEmpty()) {
+
+		// System.out.println("getting");
+		taskLock.lock();
+		if (this.tasks.peek() == null)
+			hasTask.await();
+		synchronized (this.tasks) {
+			try {
+				taskLock.unlock();
+			} catch (IllegalMonitorStateException e) {
+				// do nothing??
+			}
+			// System.out.println("gotten");
+			return this.tasks.poll();
 		}
-		return pq.poll();
 	}
 }
 
@@ -85,14 +116,14 @@ class WorkerThread extends Thread {
 	/**
 	 * The constructor.
 	 * 
-	 * @param o the thread pool 
+	 * @param o
+	 *            the thread pool
 	 */
-	
-	protected ThreadPool tp;
-	
+	protected ThreadPool threadPool;
+
 	WorkerThread(ThreadPool o) {
-//		super();
-		tp = o;
+		super();
+		this.threadPool = o;
 	}
 
 	/**
@@ -100,17 +131,11 @@ class WorkerThread extends Thread {
 	 */
 	public void run() {
 		Runnable task = null;
-		try {
-			while (true) {
-				task = tp.getJob();
-//				task.run();
-			}
-		} catch (InterruptedException e) {
-			if (task != null) {
-				try {
-					tp.addToQueue(task);
-				} catch (InterruptedException exc) {
-				}
+		while (true) {
+			try {
+				task = threadPool.getJob();
+				task.run();
+			} catch (InterruptedException e) {
 			}
 		}
 	}

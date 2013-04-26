@@ -101,7 +101,6 @@ public class KVClientHandler implements NetworkHandler {
 		Runnable r = new ClientHandler(kv_Server, client);
 		try {
 			threadpool.addToQueue(r);
-			r.run();
 		} catch (InterruptedException e) {
 			// Ignore this error
 			return;
